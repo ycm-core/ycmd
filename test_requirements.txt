@@ -6,3 +6,6 @@ WebTest               >= 2.0.20
 psutil                >= 5.6.6
 coverage              >= 4.2
 requests
+legacy-cgi            ; python_version >= "3.13"
+# Needed for building the regex and watchdog modules.
+setuptools

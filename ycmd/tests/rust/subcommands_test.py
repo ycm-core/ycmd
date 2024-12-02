@@ -33,12 +33,16 @@ import requests
 
 from ycmd import handlers
 from ycmd.tests.rust import setUpModule, tearDownModule # noqa
-from ycmd.tests.rust import PathToTestFile, SharedYcmd
+from ycmd.tests.rust import ( PathToTestFile,
+                              SharedYcmd,
+                              IsolatedYcmd,
+                              StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
                                     ExpectedFailure,
                                     LocationMatcher,
+                                    WaitForDiagnosticsToBeReady,
                                     WithRetry )
 from ycmd.utils import ReadFile
 
@@ -47,8 +51,9 @@ RESPONSE_TIMEOUT = 5
 
 
 def RunTest( app, test, contents = None ):
+  filepath = test[ 'request' ][ 'filepath' ]
   if not contents:
-    contents = ReadFile( test[ 'request' ][ 'filepath' ] )
+    contents = ReadFile( filepath )
 
   def CombineRequest( request, data ):
     kw = request
@@ -59,7 +64,7 @@ def RunTest( app, test, contents = None ):
   # is mainly because we (may) want to test scenarios where the completer
   # throws an exception and the easiest way to do that is to throw from
   # within the FlagsForFile function.
-  app.post_json( '/event_notification',
+  app.post_json( test.get( 'route', '/run_completer_command' ),
                  CombineRequest( test[ 'request' ], {
                                  'event_name': 'FileReadyToParse',
                                  'contents': contents,
@@ -67,10 +72,14 @@ def RunTest( app, test, contents = None ):
                                  } ),
                  expect_errors = True )
 
+  # rust-analyzer sometimes needs a bit of time after opening a new file.
+  # Probably to relax after some hard work...
+  WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
+
   # We also ignore errors here, but then we check the response code
   # ourself. This is to allow testing of requests returning errors.
   response = app.post_json(
-    '/run_completer_command',
+    test.get( 'route', '/run_completer_command' ),
     CombineRequest( test[ 'request' ], {
       'completer_target': 'filetype_default',
       'contents': contents,
@@ -83,13 +92,54 @@ def RunTest( app, test, contents = None ):
 
   print( f'completer response: { pformat( response.json ) }' )
 
-  assert_that( response.status_code,
-               equal_to( test[ 'expect' ][ 'response' ] ) )
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  if 'expect' in test:
+    assert_that( response.status_code,
+                 equal_to( test[ 'expect' ][ 'response' ] ) )
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  return response.json
 
 
-def RunGoToTest( app, command, test ):
-  folder = PathToTestFile( 'common', 'src' )
+def RunFixItTest( app, test ):
+  if 'chosen_fixit' in test:
+    test_no_expect = test.copy()
+    test_no_expect.pop( 'expect' )
+    response = RunTest( app, test_no_expect )
+    request = test[ 'request' ]
+    request.update( {
+      'fixit': response[ 'fixits' ][ test[ 'chosen_fixit' ] ]
+    } )
+    test[ 'route' ] = '/resolve_fixit'
+  RunTest( app, test )
+
+
+def RunHierarchyTest( app, kind, direction, location, expected, code ):
+  file, line, column = location
+  request = {
+    'completer_target' : 'filetype_default',
+    'command': f'{ kind.title() }Hierarchy',
+    'line_num'         : line,
+    'column_num'       : column,
+    'filepath'         : file,
+  }
+  test = { 'request': request,
+           'route': '/run_completer_command' }
+  prepare_hierarchy_response = RunTest( app, test )
+  request.update( {
+    'command': f'Resolve{ kind.title() }HierarchyItem',
+    'arguments': [
+      prepare_hierarchy_response[ 0 ],
+      direction
+    ]
+  } )
+  test[ 'expect' ] = {
+    'response': code,
+    'data': expected
+  }
+  RunTest( app, test )
+
+
+def RunGoToTest( app, command, test, *, project_root = 'common' ):
+  folder = PathToTestFile( project_root, 'src' )
   filepath = os.path.join( folder, test[ 'req' ][ 0 ] )
   request = {
     'command': command,
@@ -153,6 +203,8 @@ class SubcommandsTest( TestCase ):
                                       'GoToReferences',
                                       'GoToSymbol',
                                       'GoToType',
+                                      'CallHierarchy',
+                                      'ResolveCallHierarchyItem',
                                       'RefactorRename',
                                       'RestartServer' ) )
 
@@ -190,6 +242,7 @@ class SubcommandsTest( TestCase ):
     Test( app, 'GoToDefinition', [] )
     Test( app, 'GoToImplementation', [] )
     Test( app, 'GoToReferences', [] )
+    Test( app, 'CallHierarchy', [] )
     Test( app, 'RefactorRename', [ 'test' ] )
 
 
@@ -214,20 +267,20 @@ class SubcommandsTest( TestCase ):
           'fixits': contains_exactly( has_entries( {
             'chunks': contains_exactly(
               ChunkMatcher( "",
-                            LocationMatcher( filepath, 17,  4 ),
-                            LocationMatcher( filepath, 17, 16 ) ),
+                            LocationMatcher( filepath, 18,  4 ),
+                            LocationMatcher( filepath, 18, 16 ) ),
               ChunkMatcher( "",
-                            LocationMatcher( filepath, 18,  1 ),
-                            LocationMatcher( filepath, 19,  1 ) ),
+                            LocationMatcher( filepath, 19,  1 ),
+                            LocationMatcher( filepath, 20,  1 ) ),
               ChunkMatcher( "",
-                            LocationMatcher( filepath, 19,  8 ),
-                            LocationMatcher( filepath, 20,  8 ) ),
+                            LocationMatcher( filepath, 20,  8 ),
+                            LocationMatcher( filepath, 21,  8 ) ),
               ChunkMatcher( "",
-                            LocationMatcher( filepath, 20, 10 ),
-                            LocationMatcher( filepath, 20, 11 ) ),
+                            LocationMatcher( filepath, 21, 10 ),
+                            LocationMatcher( filepath, 21, 11 ) ),
               ChunkMatcher( "",
-                            LocationMatcher( filepath, 20, 13 ),
-                            LocationMatcher( filepath, 21,  1 ) ),
+                            LocationMatcher( filepath, 21, 13 ),
+                            LocationMatcher( filepath, 22,  1 ) ),
             )
           } ) )
         } )
@@ -249,11 +302,11 @@ class SubcommandsTest( TestCase ):
         'filepath': filepath,
         'range': {
           'start': {
-            'line_num': 17,
+            'line_num': 18,
             'column_num': 1,
           },
           'end': {
-            'line_num': 22,
+            'line_num': 23,
             'column_num': 2
           }
         },
@@ -269,8 +322,8 @@ class SubcommandsTest( TestCase ):
             'chunks': contains_exactly(
               ChunkMatcher( 'fn format_test() {\n'
                             '\tlet a: i32 = 5;\n',
-                            LocationMatcher( filepath, 17, 1 ),
-                            LocationMatcher( filepath, 22, 1 ) ),
+                            LocationMatcher( filepath, 18, 1 ),
+                            LocationMatcher( filepath, 23, 1 ) ),
             )
           } ) )
         } )
@@ -358,13 +411,13 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToType_Basic( self, app ):
     for test in [
       # Variable
-      { 'req': ( 'main.rs', 14,  5 ), 'res': ( 'test.rs', 4, 12 ) },
+      { 'req': ( 'main.rs', 15,  5 ), 'res': ( 'test.rs', 4, 12 ) },
       # Type
-      { 'req': ( 'main.rs', 13, 19 ), 'res': ( 'test.rs', 4, 12 ) },
+      { 'req': ( 'main.rs', 14, 19 ), 'res': ( 'test.rs', 4, 12 ) },
       # Function
-      { 'req': ( 'main.rs', 12, 14 ), 'res': 'Cannot jump to location' },
+      { 'req': ( 'main.rs', 13, 14 ), 'res': 'Cannot jump to location' },
       # Keyword
-      { 'req': ( 'main.rs',  3,  2 ), 'res': 'Cannot jump to location' },
+      { 'req': ( 'main.rs',  4,  2 ), 'res': 'Cannot jump to location' },
     ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToType', test )
@@ -376,13 +429,13 @@ class SubcommandsTest( TestCase ):
     for test, command in itertools.product(
         [
           # Structure
-          { 'req': ( 'main.rs',  8, 24 ), 'res': ( 'main.rs', 5, 8 ) },
+          { 'req': ( 'main.rs',  9, 24 ), 'res': ( 'main.rs', 6, 8 ) },
           # Function
-          { 'req': ( 'main.rs', 12, 14 ), 'res': ( 'test.rs', 2, 8 ) },
+          { 'req': ( 'main.rs', 13, 14 ), 'res': ( 'test.rs', 2, 8 ) },
           # Implementation
-          { 'req': ( 'main.rs',  9, 12 ), 'res': ( 'main.rs', 7, 7 ) },
+          { 'req': ( 'main.rs',  10, 12 ), 'res': ( 'main.rs', 8, 7 ) },
           # Keyword
-          { 'req': ( 'main.rs',  3,  2 ), 'res': 'Cannot jump to location' },
+          { 'req': ( 'main.rs',  4,  2 ), 'res': 'Cannot jump to location' },
         ],
         [ 'GoToDefinition', 'GoTo' ] ):
       with self.subTest( test = test, command = command ):
@@ -394,10 +447,10 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToImplementation( self, app ):
     for test in [
       # Structure
-      { 'req': ( 'main.rs',  5,  9 ), 'res': ( 'main.rs', 8, 21 ) },
+      { 'req': ( 'main.rs',  6,  9 ), 'res': ( 'main.rs', 9, 21 ) },
       # Trait
-      { 'req': ( 'main.rs',  7,  7 ), 'res': [ ( 'main.rs', 8, 21 ),
-                                               ( 'main.rs', 9, 21 ) ] },
+      { 'req': ( 'main.rs',  8,  7 ), 'res': [ ( 'main.rs', 9, 21 ),
+                                               ( 'main.rs', 10, 21 ) ] },
     ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToImplementation', test )
@@ -408,7 +461,7 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToImplementation_Failure( self, app ):
     RunGoToTest( app,
                  'GoToImplementation',
-                 { 'req': ( 'main.rs', 11,  2 ),
+                 { 'req': ( 'main.rs', 12,  2 ),
                    'res': 'Cannot jump to location',
                    'exc': RuntimeError } )
 
@@ -417,17 +470,17 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToReferences( self, app ):
     for test in [
       # Struct
-      { 'req': ( 'main.rs',  9, 22 ), 'res': [ ( 'main.rs',  6,  8 ),
-                                               ( 'main.rs',  9, 21 ) ] },
+      { 'req': ( 'main.rs', 10, 22 ), 'res': [ ( 'main.rs',  7,  8 ),
+                                               ( 'main.rs', 10, 21 ) ] },
       # Function
-      { 'req': ( 'main.rs', 12,  8 ), 'res': [ ( 'test.rs',  2,  8 ),
-                                               ( 'main.rs', 12,  5 ) ] },
+      { 'req': ( 'main.rs', 13,  8 ), 'res': [ ( 'test.rs',  2,  8 ),
+                                               ( 'main.rs', 13,  5 ) ] },
       # Implementation
-      { 'req': ( 'main.rs',  8, 10 ), 'res': [ ( 'main.rs',  7,  7 ),
-                                               ( 'main.rs',  8,  6 ),
-                                               ( 'main.rs',  9,  6 ) ] },
+      { 'req': ( 'main.rs',  9, 10 ), 'res': [ ( 'main.rs',  8,  7 ),
+                                               ( 'main.rs',  9,  6 ),
+                                               ( 'main.rs', 10,  6 ) ] },
       # Keyword
-      { 'req': ( 'main.rs',  1,  1 ), 'res': 'Cannot jump to location' }
+      { 'req': ( 'main.rs',  2,  1 ), 'res': 'Cannot jump to location' }
     ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToReferences', test )
@@ -444,7 +497,7 @@ class SubcommandsTest( TestCase ):
       'request': {
         'command': 'RefactorRename',
         'arguments': [ 'update_universe' ],
-        'line_num': 12,
+        'line_num': 13,
         'column_num': 16,
         'filepath': main_filepath
       },
@@ -455,8 +508,8 @@ class SubcommandsTest( TestCase ):
             'text': '',
             'chunks': contains_exactly(
               ChunkMatcher( 'update_universe',
-                            LocationMatcher( main_filepath, 12,  5 ),
-                            LocationMatcher( main_filepath, 12, 20 ) ),
+                            LocationMatcher( main_filepath, 13,  5 ),
+                            LocationMatcher( main_filepath, 13, 20 ) ),
               ChunkMatcher( 'update_universe',
                             LocationMatcher( test_filepath,  2,  8 ),
                             LocationMatcher( test_filepath,  2, 23 ) ),
@@ -474,7 +527,7 @@ class SubcommandsTest( TestCase ):
       'request': {
         'command': 'RefactorRename',
         'arguments': [ 'update_universe' ],
-        'line_num': 15,
+        'line_num': 16,
         'column_num': 7,
         'filepath': PathToTestFile( 'common', 'src', 'main.rs' )
       },
@@ -490,12 +543,12 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_FixIt_EmptyResponse( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
-    RunTest( app, {
+    RunFixItTest( app, {
       'description': 'FixIt on a line with no '
                      'codeAction returns empty response',
       'request': {
         'command': 'FixIt',
-        'line_num': 16,
+        'line_num': 17,
         'column_num': 1,
         'filepath': filepath
       },
@@ -510,11 +563,12 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_FixIt_Basic( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
-    RunTest( app, {
+    RunFixItTest( app, {
       'description': 'Simple FixIt test',
+      'chosen_fixit': 2,
       'request': {
         'command': 'FixIt',
-        'line_num': 17,
+        'line_num': 18,
         'column_num': 2,
         'filepath': filepath
       },
@@ -524,10 +578,128 @@ class SubcommandsTest( TestCase ):
           'fixits': has_item( has_entries( {
             'chunks': contains_exactly(
               ChunkMatcher( 'pub(crate) ',
-                            LocationMatcher( filepath, 17, 1 ),
-                            LocationMatcher( filepath, 17, 1 ) )
+                            LocationMatcher( filepath, 18, 1 ),
+                            LocationMatcher( filepath, 18, 1 ) )
             )
           } ) )
         } )
       },
     } )
+
+
+  @WithRetry()
+  @IsolatedYcmd()
+  def test_Subcommands_GoTo_WorksAfterChangingProject( self, app ):
+    filepath = PathToTestFile( 'macro', 'src', 'main.rs' )
+    StartRustCompleterServerInDirectory( app, filepath )
+
+    for test, root in [
+        (
+          { 'req': ( 'main.rs', 31, 24 ), 'res': ( 'main.rs', 14, 9 ) },
+          'macro'
+        ),
+        (
+          { 'req': ( 'main.rs', 14, 19 ), 'res': ( 'test.rs', 4, 12 ) },
+          'common'
+        ),
+    ]:
+      with self.subTest( test = test, root = root ):
+        RunGoToTest( app, 'GoTo', test, project_root = root )
+
+
+  @SharedYcmd
+  def test_Subcommands_OutgoingCallHierarchy( self, app ):
+    filepath = PathToTestFile( 'common', 'src', 'hierarchies.rs' )
+    for location, response, code in [
+      [ ( filepath, 9, 4 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 13 ) ),
+            'kind': 'Function',
+            'name': 'g'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 5 ) ),
+            'kind': 'Function',
+            'name': 'f'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 5, 4 ),
+        contains_inanyorder(
+          has_entry( 'locations',
+                     contains_exactly(
+                       LocationMatcher( filepath, 6, 5 ),
+                       LocationMatcher( filepath, 6, 11 )
+                     ) ) ),
+        requests.codes.ok ],
+      [ ( filepath, 1, 4 ),
+        ErrorMatcher( RuntimeError, 'No outgoing calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'outgoing', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_IncomingCallHierarchy( self, app ):
+    filepath = PathToTestFile( 'common', 'src', 'hierarchies.rs' )
+    for location, response, code in [
+      [ ( filepath, 1, 4 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 6, 5 ),
+                           LocationMatcher( filepath, 6, 11 ) ),
+            'root_location': LocationMatcher( filepath, 5, 4 ),
+            'name': 'g',
+            'kind': 'Function'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 5 ) ),
+            'root_location': LocationMatcher( filepath, 9, 4 ),
+            'name': 'h',
+            'kind': 'Function'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 5, 4 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 13 ) ),
+            'root_location': LocationMatcher( filepath, 9, 4 ),
+            'name': 'h',
+            'kind': 'Function'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 9, 4 ),
+        ErrorMatcher( RuntimeError, 'No incoming calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'incoming', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_NoHierarchyFound( self, app ):
+    filepath = PathToTestFile( 'common', 'src', 'hierarchies.rs' )
+    request = {
+      'completer_target' : 'filetype_default',
+      'command': 'CallHierarchy',
+      'line_num'         : 4,
+      'column_num'       : 1,
+      'filepath'         : filepath,
+      'filetype'         : 'rust'
+    }
+    test = { 'request': request,
+             'route': '/run_completer_command',
+             'expect': {
+               'response': requests.codes.server_error,
+               'data': ErrorMatcher(
+                   RuntimeError, 'No call hierarchy found.' ) } }
+    RunTest( app, test )

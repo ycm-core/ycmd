@@ -26,10 +26,10 @@
 namespace YouCompleteMe {
 
 // See
-// http://www.unicode.org/reports/tr29/tr29-37.html#Grapheme_Cluster_Break_Property_Values
+// http://www.unicode.org/reports/tr29#Grapheme_Cluster_Break_Property_Values
 // NOTE: The properties must take the same value as the ones defined in the
 // update_unicode.py script.
-enum class BreakProperty : uint8_t {
+enum class GraphemeBreakProperty : uint8_t {
   OTHER              =  0,
   CR                 =  1,
   LF                 =  2,
@@ -46,6 +46,15 @@ enum class BreakProperty : uint8_t {
   LVT                = 13,
   EXTPICT            = 18
 };
+// See https://www.unicode.org/reports/tr44/#Indic_Conjunct_Break
+// NOTE: The properties must take the same value as the ones defined in the
+// update_unicode.py script.
+enum class IndicConjunctBreakProperty : uint8_t {
+  None      =  0,
+  LINKER    =  1,
+  CONSONANT =  2,
+  EXTEND    =  3,
+};
 
 
 // This is the structure used to store the data in the Unicode table. See the
@@ -58,8 +67,9 @@ struct RawCodePoint {
   bool is_letter;
   bool is_punctuation;
   bool is_uppercase;
-  uint8_t break_property;
+  uint8_t grapheme_break_property;
   uint8_t combining_class;
+  uint8_t indic_conjunct_break_property;
 };
 
 
@@ -81,7 +91,7 @@ struct RawCodePoint {
 //  - its breaking property: used to split a word into characters.
 //  - its combining class: used to sort a sequence of code points according to
 //    the Canonical Ordering algorithm (see
-//    https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G49591).
+//    https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49591).
 class CodePoint {
 public:
   YCM_EXPORT explicit CodePoint( std::string_view code_point );
@@ -115,12 +125,16 @@ public:
     return is_uppercase_;
   }
 
-  inline BreakProperty GetBreakProperty() const {
-    return break_property_;
+  inline GraphemeBreakProperty GetGraphemeBreakProperty() const {
+    return grapheme_break_property_;
   }
 
   inline uint8_t CombiningClass() const {
     return combining_class_;
+  }
+
+  inline IndicConjunctBreakProperty GetIndicConjunctBreakProperty() const {
+    return indic_conjunct_break_property_;
   }
 
   inline bool operator< ( const CodePoint &other ) const {
@@ -136,8 +150,9 @@ private:
   bool is_letter_;
   bool is_punctuation_;
   bool is_uppercase_;
-  BreakProperty break_property_;
+  GraphemeBreakProperty grapheme_break_property_;
   uint8_t combining_class_;
+  IndicConjunctBreakProperty indic_conjunct_break_property_;
 };
 
 

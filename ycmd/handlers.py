@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-import bottle
 import json
 import platform
 import sys
 import time
 import traceback
-from bottle import request
 
 
+import ycmd.web_plumbing
 from ycmd import extra_conf_store, hmac_plugin, server_state, user_options_store
 from ycmd.responses import ( BuildExceptionResponse,
                              BuildCompletionResponse,
@@ -40,18 +39,14 @@ from ycmd.utils import LOGGER, StartThread, ImportCore
 ycm_core = ImportCore()
 
 
-# num bytes for the request body buffer; request.json only works if the request
-# size is less than this
-bottle.Request.MEMFILE_MAX = 10 * 1024 * 1024
-
 _server_state = None
 _hmac_secret = bytes()
-app = bottle.Bottle()
+app = ycmd.web_plumbing.AppProducer()
 wsgi_server = None
 
 
 @app.post( '/event_notification' )
-def EventNotification():
+def EventNotification( request, response ):
   request_data = RequestWrap( request.json )
   event_name = request_data[ 'event_name' ]
   LOGGER.debug( 'Event name: %s', event_name )
@@ -66,45 +61,46 @@ def EventNotification():
                              event_handler )( request_data )
 
   if response_data:
-    return _JsonResponse( response_data )
-  return _JsonResponse( {} )
+    return _JsonResponse( response_data, response )
+  return _JsonResponse( {}, response )
 
 
 @app.get( '/signature_help_available' )
-def GetSignatureHelpAvailable():
+def GetSignatureHelpAvailable( request, response ):
   if request.query.subserver:
     filetype = request.query.subserver
     try:
       completer = _server_state.GetFiletypeCompleter( [ filetype ] )
     except ValueError:
       return _JsonResponse( BuildSignatureHelpAvailableResponse(
-        SignatureHelpAvailalability.NOT_AVAILABLE ) )
+        SignatureHelpAvailalability.NOT_AVAILABLE ), response )
     value = completer.SignatureHelpAvailable()
-    return _JsonResponse( BuildSignatureHelpAvailableResponse( value ) )
+    return _JsonResponse( BuildSignatureHelpAvailableResponse( value ),
+                          response )
   else:
     raise RuntimeError( 'Subserver not specified' )
 
 
 @app.post( '/run_completer_command' )
-def RunCompleterCommand():
+def RunCompleterCommand( request, response ):
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
   return _JsonResponse( completer.OnUserCommand(
       request_data[ 'command_arguments' ],
-      request_data ) )
+      request_data ), response )
 
 
 @app.post( '/resolve_fixit' )
-def ResolveFixit():
+def ResolveFixit( request, response ):
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
-  return _JsonResponse( completer.ResolveFixit( request_data ) )
+  return _JsonResponse( completer.ResolveFixit( request_data ), response )
 
 
 @app.post( '/completions' )
-def GetCompletions():
+def GetCompletions( request, response ):
   request_data = RequestWrap( request.json )
   do_filetype_completion = _server_state.ShouldUseFiletypeCompleter(
     request_data )
@@ -137,11 +133,11 @@ def GetCompletions():
   return _JsonResponse(
       BuildCompletionResponse( completions if completions else [],
                                request_data[ 'start_column' ],
-                               errors = errors ) )
+                               errors = errors ), response )
 
 
 @app.post( '/resolve_completion' )
-def ResolveCompletionItem():
+def ResolveCompletionItem( request, response ):
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
@@ -152,16 +148,17 @@ def ResolveCompletionItem():
   except Exception as e:
     errors = [ BuildExceptionResponse( e, traceback.format_exc() ) ]
 
-  return _JsonResponse( BuildResolveCompletionResponse( completion, errors ) )
+  return _JsonResponse( BuildResolveCompletionResponse( completion, errors ),
+                        response )
 
 
 @app.post( '/signature_help' )
-def GetSignatureHelp():
+def GetSignatureHelp( request, response ):
   request_data = RequestWrap( request.json )
 
   if not _server_state.FiletypeCompletionUsable( request_data[ 'filetypes' ],
                                                  silent = True ):
-    return _JsonResponse( BuildSignatureHelpResponse( None ) )
+    return _JsonResponse( BuildSignatureHelpResponse( None ), response )
 
   errors = None
   signature_info = None
@@ -177,17 +174,17 @@ def GetSignatureHelp():
   # No fallback for signature help. The general completer is unlikely to be able
   # to offer anything of for that here.
   return _JsonResponse(
-      BuildSignatureHelpResponse( signature_info, errors = errors ) )
+      BuildSignatureHelpResponse( signature_info, errors = errors ), response )
 
 
 @app.post( '/semantic_tokens' )
-def GetSemanticTokens():
+def GetSemanticTokens( request, response ):
   LOGGER.info( 'Received semantic tokens request' )
   request_data = RequestWrap( request.json )
 
   if not _server_state.FiletypeCompletionUsable( request_data[ 'filetypes' ],
                                                  silent = True ):
-    return _JsonResponse( BuildSemanticTokensResponse( None ) )
+    return _JsonResponse( BuildSemanticTokensResponse( None ), response )
 
   errors = None
   semantic_tokens = None
@@ -204,17 +201,18 @@ def GetSemanticTokens():
   # No fallback for signature help. The general completer is unlikely to be able
   # to offer anything of for that here.
   return _JsonResponse(
-      BuildSemanticTokensResponse( semantic_tokens, errors = errors ) )
+      BuildSemanticTokensResponse( semantic_tokens, errors = errors ),
+      response )
 
 
 @app.post( '/inlay_hints' )
-def GetInlayHints():
+def GetInlayHints( request, response ):
   LOGGER.info( 'Received inlay hints request' )
   request_data = RequestWrap( request.json )
 
   if not _server_state.FiletypeCompletionUsable( request_data[ 'filetypes' ],
                                                  silent = True ):
-    return _JsonResponse( BuildInlayHintsResponse( None ) )
+    return _JsonResponse( BuildInlayHintsResponse( None ), response )
 
   errors = None
   inlay_hints = None
@@ -231,11 +229,11 @@ def GetInlayHints():
   # No fallback for signature help. The general completer is unlikely to be able
   # to offer anything of for that here.
   return _JsonResponse(
-      BuildInlayHintsResponse( inlay_hints, errors = errors ) )
+      BuildInlayHintsResponse( inlay_hints, errors = errors ), response )
 
 
 @app.post( '/filter_and_sort_candidates' )
-def FilterAndSortCandidates():
+def FilterAndSortCandidates( request, response ):
   # Not using RequestWrap because no need and the requests coming in aren't like
   # the usual requests we handle.
   request_data = request.json
@@ -244,66 +242,67 @@ def FilterAndSortCandidates():
     request_data[ 'candidates' ],
     request_data[ 'sort_property' ],
     request_data[ 'query' ],
-    _server_state.user_options[ 'max_num_candidates' ] ) )
+    _server_state.user_options[ 'max_num_candidates' ] ), response )
 
 
 @app.get( '/healthy' )
-def GetHealthy():
+def GetHealthy( request, response ):
   if request.query.subserver:
     filetype = request.query.subserver
     completer = _server_state.GetFiletypeCompleter( [ filetype ] )
-    return _JsonResponse( completer.ServerIsHealthy() )
-  return _JsonResponse( True )
+    return _JsonResponse( completer.ServerIsHealthy(), response )
+  return _JsonResponse( True, response )
 
 
 @app.get( '/ready' )
-def GetReady():
+def GetReady( request, response ):
   if request.query.subserver:
     filetype = request.query.subserver
     completer = _server_state.GetFiletypeCompleter( [ filetype ] )
-    return _JsonResponse( completer.ServerIsReady() )
-  return _JsonResponse( True )
+    return _JsonResponse( completer.ServerIsReady(), response )
+  return _JsonResponse( True, response )
 
 
 @app.post( '/semantic_completion_available' )
-def FiletypeCompletionAvailable():
+def FiletypeCompletionAvailable( request, response ):
   return _JsonResponse( _server_state.FiletypeCompletionAvailable(
-      RequestWrap( request.json )[ 'filetypes' ] ) )
+      RequestWrap( request.json )[ 'filetypes' ] ), response )
 
 
 @app.post( '/defined_subcommands' )
-def DefinedSubcommands():
+def DefinedSubcommands( request, response ):
   completer = _GetCompleterForRequestData( RequestWrap( request.json ) )
 
-  return _JsonResponse( completer.DefinedSubcommands() )
+  return _JsonResponse( completer.DefinedSubcommands(), response )
 
 
 @app.post( '/detailed_diagnostic' )
-def GetDetailedDiagnostic():
+def GetDetailedDiagnostic( request, response ):
   request_data = RequestWrap( request.json )
   completer = _GetCompleterForRequestData( request_data )
 
-  return _JsonResponse( completer.GetDetailedDiagnostic( request_data ) )
+  return _JsonResponse( completer.GetDetailedDiagnostic( request_data ),
+                        response )
 
 
 @app.post( '/load_extra_conf_file' )
-def LoadExtraConfFile():
+def LoadExtraConfFile( request, response ):
   request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Load( request_data[ 'filepath' ], force = True )
 
-  return _JsonResponse( True )
+  return _JsonResponse( True, response )
 
 
 @app.post( '/ignore_extra_conf_file' )
-def IgnoreExtraConfFile():
+def IgnoreExtraConfFile( request, response ):
   request_data = RequestWrap( request.json, validate = False )
   extra_conf_store.Disable( request_data[ 'filepath' ] )
 
-  return _JsonResponse( True )
+  return _JsonResponse( True, response )
 
 
 @app.post( '/debug_info' )
-def DebugInfo():
+def DebugInfo( request, response ):
   request_data = RequestWrap( request.json )
 
   has_clang_support = ycm_core.HasClangSupport()
@@ -317,7 +316,7 @@ def DebugInfo():
     extra_conf_path = error.extra_conf_file
     is_loaded = False
 
-  response = {
+  result = {
     'python': {
       'executable': sys.executable,
       'version': platform.python_version()
@@ -334,22 +333,22 @@ def DebugInfo():
   }
 
   try:
-    response[ 'completer' ] = _GetCompleterForRequestData(
+    result[ 'completer' ] = _GetCompleterForRequestData(
         request_data ).DebugInfo( request_data )
   except Exception:
     LOGGER.exception( 'Error retrieving completer debug info' )
 
-  return _JsonResponse( response )
+  return _JsonResponse( result, response )
 
 
 @app.post( '/shutdown' )
-def Shutdown():
+def Shutdown( request, response ):
   ServerShutdown()
-  return _JsonResponse( True )
+  return _JsonResponse( True, response )
 
 
 @app.post( '/receive_messages' )
-def ReceiveMessages():
+def ReceiveMessages( request, response ):
   # Receive messages is a "long-poll" handler.
   # The client makes the request with a long timeout (1 hour).
   # When we have data to send, we send it and close the socket.
@@ -360,25 +359,26 @@ def ReceiveMessages():
   except Exception:
     # No semantic completer for this filetype, don't requery. This is not an
     # error.
-    return _JsonResponse( False )
+    return _JsonResponse( False, response )
 
-  return _JsonResponse( completer.PollForMessages( request_data ) )
+  return _JsonResponse( completer.PollForMessages( request_data ), response )
 
 
-# The type of the param is Bottle.HTTPError
-def ErrorHandler( httperror ):
+def ErrorHandler( httperror : ycmd.web_plumbing.HTTPError,
+                  response : ycmd.web_plumbing.Response ):
   body = _JsonResponse( BuildExceptionResponse( httperror.exception,
-                                                httperror.traceback ) )
-  hmac_plugin.SetHmacHeader( body, _hmac_secret )
+                                                httperror.traceback ),
+                        response )
+  hmac_plugin.SetHmacHeader( body, _hmac_secret, response )
   return body
 
 
 # For every error Bottle encounters it will use this as the default handler
-app.default_error_handler = ErrorHandler
+app.SetErrorHandler( ErrorHandler )
 
 
-def _JsonResponse( data ):
-  bottle.response.set_header( 'Content-Type', 'application/json' )
+def _JsonResponse( data, response : ycmd.web_plumbing.Response ):
+  response.set_header( 'Content-Type', 'application/json' )
   return json.dumps( data,
                      separators = ( ',', ':' ),
                      default = _UniversalSerialize )

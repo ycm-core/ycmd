@@ -2,6 +2,7 @@
 build/
 
 .classpath
+.factorypath
 .project
 .settings/
 target/

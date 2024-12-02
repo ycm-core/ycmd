@@ -104,6 +104,10 @@ class DebugInfoTest( TestCase ):
               'value': PathToTestFile( 'simple_eclipse_project' )
             } ),
             has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
+            } ),
+            has_entries( {
               'key': 'Settings',
               'value': json.dumps(
                 { 'bundles': [] },
@@ -158,6 +162,10 @@ class DebugInfoTest( TestCase ):
               'key': 'Project Directory',
               'value': PathToTestFile( 'extra_confs',
                                        'simple_extra_conf_project' )
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',

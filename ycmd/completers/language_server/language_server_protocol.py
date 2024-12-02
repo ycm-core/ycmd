@@ -294,7 +294,11 @@ def BuildResponse( request, parameters ):
   return _BuildMessageData( message )
 
 
-def Initialize( request_id, project_directory, extra_capabilities, settings ):
+def Initialize( request_id,
+                project_directory,
+                extra_capabilities,
+                settings,
+                workspaces ):
   """Build the Language Server initialize request"""
 
   capabilities = {
@@ -322,8 +326,13 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
                           'refactor.inline',
                           'refactor.rewrite',
                           'source',
-                          'source.organizeImports' ]
+                          'source.organizeImports',
+                          'source.fixAll' ]
           }
+        },
+        'dataSupport': True,
+        'resolveSupport': {
+          'properties': [ 'edit', 'command' ]
         }
       },
       'completion': {
@@ -393,7 +402,7 @@ def Initialize( request_id, project_directory, extra_capabilities, settings ):
     'rootUri': FilePathToUri( project_directory ),
     'initializationOptions': settings,
     'capabilities': UpdateDict( capabilities, extra_capabilities ),
-    'workspaceFolders': WorkspaceFolders( project_directory ),
+    'workspaceFolders': WorkspaceFolders( *workspaces ),
   } )
 
 
@@ -445,6 +454,15 @@ def Accept( request, result ):
 def ApplyEditResponse( request, applied ):
   msg = { 'applied': applied }
   return Accept( request, msg )
+
+
+def DidChangeWorkspaceFolders( new_folder ):
+  return BuildNotification( 'workspace/didChangeWorkspaceFolders', {
+    'event': {
+      'removed': [],
+      'added': WorkspaceFolders( new_folder )
+    }
+  } )
 
 
 def DidChangeWatchedFiles( path, kind ):
@@ -567,6 +585,10 @@ def CodeAction( request_id, request_data, best_match_range, diagnostics ):
   } )
 
 
+def CodeActionResolve( request_id, code_action ):
+  return BuildRequest( request_id, 'codeAction/resolve', code_action )
+
+
 def Rename( request_id, request_data, new_name ):
   return BuildRequest( request_id, 'textDocument/rename', {
     'textDocument': TextDocumentIdentifier( request_data ),
@@ -620,8 +642,8 @@ def Position( line_num, line_value, column_codepoint ):
   }
 
 
-def PrepareCallHierarchy( request_id, request_data ):
-  return BuildRequest( request_id, 'textDocument/prepareCallHierarchy', {
+def PrepareHierarchy( request_id, request_data, kind ):
+  return BuildRequest( request_id, f'textDocument/prepare{ kind }Hierarchy', {
     'textDocument': {
       'uri': FilePathToUri( request_data[ 'filepath' ] ),
     },
@@ -631,8 +653,8 @@ def PrepareCallHierarchy( request_id, request_data ):
   } )
 
 
-def CallHierarchy( request_id, direction, item ):
-  return BuildRequest( request_id, f'callHierarchy/{ direction }Calls', {
+def Hierarchy( request_id, kind, direction, item ):
+  return BuildRequest( request_id, f'{ kind }Hierarchy/{ direction }', {
     'item': item
   } )
 

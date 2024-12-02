@@ -67,10 +67,11 @@ RawCodePoint FindCodePoint( std::string_view text ) {
              code_points.is_punctuation[ index ],
              code_points.is_uppercase[ index ],
              code_points.break_property[ index ],
-             code_points.combining_class[ index ] };
+             code_points.combining_class[ index ],
+             code_points.indic_conjunct_break[ index ] };
   }
 
-  return { text, text, text, text, false, false, false, 0, 0 };
+  return { text, text, text, text, false, false, false, 0, 0, 0 };
 }
 
 } // unnamed namespace
@@ -87,9 +88,11 @@ CodePoint::CodePoint( RawCodePoint&& code_point )
     is_letter_( code_point.is_letter ),
     is_punctuation_( code_point.is_punctuation ),
     is_uppercase_( code_point.is_uppercase ),
-    break_property_(
-      static_cast< BreakProperty >( code_point.break_property ) ),
-    combining_class_( code_point.combining_class ) {
+    grapheme_break_property_(
+      static_cast< GraphemeBreakProperty >( code_point.grapheme_break_property ) ),
+    combining_class_( code_point.combining_class ),
+    indic_conjunct_break_property_(
+      static_cast< IndicConjunctBreakProperty >( code_point.indic_conjunct_break_property ) ) {
 }
 
 

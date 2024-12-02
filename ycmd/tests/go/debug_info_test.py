@@ -19,6 +19,7 @@ from hamcrest import ( assert_that,
                        contains_exactly,
                        has_entries,
                        has_entry,
+                       has_items,
                        instance_of,
                        is_not,
                        empty )
@@ -61,6 +62,10 @@ class DebugInfoTest( TestCase ):
               'value': PathToTestFile(),
             } ),
             has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
+            } ),
+            has_entries( {
               'key': 'Settings',
               'value': is_json_string_matching( has_entries( {
                 'hints': is_not( empty() ),
@@ -101,6 +106,10 @@ class DebugInfoTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile(),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items()
             } ),
             has_entries( {
               'key': 'Settings',

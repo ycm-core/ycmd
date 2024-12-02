@@ -357,3 +357,34 @@ class GetCompletionsTest( TestCase ):
         } )
       }
     } )
+
+
+  @SharedYcmd
+  def test_GetCompletions_WithTags( self, app ):
+    filepath = PathToTestFile( 'signatures.ts' )
+    RunTest( app, {
+      'description': 'No need to force after a semantic trigger',
+      'request': {
+        'line_num': 101,
+        'column_num': 24,
+        'filepath': filepath,
+        'filetype': 'typescript'
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'completions': has_item( has_entries( {
+            'insertion_text': 'single_argument_with_doc',
+            'extra_data': {},
+            'extra_menu_info':
+                'function single_argument_with_doc(a: string): string',
+            'detailed_info':
+                'function single_argument_with_doc(a: string): string\n\n'
+                'A function with a single argument\n\n'
+                'param: a - The argument\n'
+                'returns: - The hashed input',
+            'kind': 'function'
+          } ) )
+        } )
+      }
+    } )

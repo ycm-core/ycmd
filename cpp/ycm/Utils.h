@@ -99,19 +99,6 @@ FindWithDefault( Container &container,
 }
 
 
-template <class Container, class Key>
-bool Erase( Container &container, const Key &key ) {
-  typename Container::iterator it = container.find( key );
-
-  if ( it != container.end() ) {
-    container.erase( it );
-    return true;
-  }
-
-  return false;
-}
-
-
 // Shrink a vector to its sorted |num_sorted_elements| smallest elements. If
 // |num_sorted_elements| is 0 or larger than the vector size, sort the whole
 // vector.

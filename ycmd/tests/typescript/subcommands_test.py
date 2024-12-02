@@ -77,10 +77,38 @@ def RunTest( app, test ):
 
   print( f'completer response: { pprint.pformat( response.json ) }' )
 
-  assert_that( response.status_code,
-               equal_to( test[ 'expect' ][ 'response' ] ) )
+  if 'expect' in test:
+    assert_that( response.status_code,
+                 equal_to( test[ 'expect' ][ 'response' ] ) )
 
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  return response.json
+
+
+def RunHierarchyTest( app, kind, direction, location, expected, code ):
+  file, line, column = location
+  request = {
+    'completer_target' : 'filetype_default',
+    'command': f'{ kind.title() }Hierarchy',
+    'line_num'         : line,
+    'column_num'       : column,
+    'filepath'         : file,
+  }
+  test = { 'request': request,
+           'route': '/run_completer_command' }
+  prepare_hierarchy_response = RunTest( app, test )
+  request.update( {
+    'command': f'Resolve{ kind.title() }HierarchyItem',
+    'arguments': [
+      prepare_hierarchy_response[ 0 ],
+      direction
+    ]
+  } )
+  test[ 'expect' ] = {
+    'response': code,
+    'data': expected
+  }
+  RunTest( app, test )
 
 
 def Subcommands_GoTo_Basic( app, goto_command ):
@@ -140,6 +168,8 @@ class SubcommandsTest( TestCase ):
       app.post_json( '/defined_subcommands', subcommands_data ).json,
       contains_inanyorder(
         'Format',
+        'CallHierarchy',
+        'ResolveCallHierarchyItem',
         'GoTo',
         'GoToCallees',
         'GoToCallers',
@@ -605,6 +635,29 @@ class SubcommandsTest( TestCase ):
         'data': has_entries( {
            'detailed_info': 'class Båøz\n\n'
                             'Test unicøde st††††',
+        } )
+      }
+    } )
+
+
+  @SharedYcmd
+  def test_Subcommands_GetDoc_FreeFunction_WithTags( self, app ):
+    RunTest( app, {
+      'description': 'GetDoc shows documentation of param and returns tags',
+      'request': {
+        'command': 'GetDoc',
+        'line_num': 101,
+        'column_num': 12,
+        'filepath': PathToTestFile( 'signatures.ts' ),
+      },
+      'expect': {
+        'response': requests.codes.ok,
+        'data': has_entries( {
+          'detailed_info':
+              'function single_argument_with_doc(a: string): string\n\n'
+              'A function with a single argument\n\n'
+              'param: a - The argument\n'
+              'returns: - The hashed input'
         } )
       }
     } )
@@ -1144,3 +1197,104 @@ class SubcommandsTest( TestCase ):
                      has_entry( 'is_running', False )
                    ) )
                  ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_OutgoingCallHierarchy( self, app ):
+    filepath = PathToTestFile( 'hierarchies.ts' )
+    for location, response, code in [
+      [ ( filepath, 9, 10 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 11 ) ),
+            'kind': 'function',
+            'name': 'g'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 14 ) ),
+            'kind': 'function',
+            'name': 'f'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 5, 10 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 6, 10 ),
+                           LocationMatcher( filepath, 6, 16 ) ),
+            'kind': 'function',
+            'name': 'f'
+          } ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 1, 10 ),
+        ErrorMatcher( RuntimeError, 'No outgoing calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'outgoing', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_IncomingCallHierarchy( self, app ):
+    filepath = PathToTestFile( 'hierarchies.ts' )
+    for location, response, code in [
+      [ ( filepath, 1, 10 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 6, 10 ),
+                           LocationMatcher( filepath, 6, 16 ) ),
+            'root_location': LocationMatcher( filepath, 5, 10 ),
+            'name': 'g',
+            'kind': 'function'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 14 ) ),
+            'root_location': LocationMatcher( filepath, 9, 10 ),
+            'name': 'h',
+            'kind': 'function'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 5, 10 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                             LocationMatcher( filepath, 10, 11 ) ),
+            'root_location': LocationMatcher( filepath, 9, 10 ),
+            'name': 'h',
+            'kind': 'function'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 9, 10 ),
+        ErrorMatcher( RuntimeError, 'No incoming calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'incoming', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_NoHierarchyFound( self, app ):
+    filepath = PathToTestFile( 'hierarchies.ts' )
+    request = {
+      'completer_target' : 'filetype_default',
+      'command': 'CallHierarchy',
+      'line_num'         : 4,
+      'column_num'       : 1,
+      'filepath'         : filepath,
+      'filetype'         : 'typescript'
+    }
+    test = { 'request': request,
+             'route': '/run_completer_command',
+             'expect': {
+               'response': requests.codes.server_error,
+               'data': ErrorMatcher(
+                   RuntimeError, 'No content available.' ) } }
+    RunTest( app, test )

@@ -21,10 +21,12 @@ from hamcrest import ( assert_that,
                        contains_exactly,
                        contains_string,
                        empty,
+                       ends_with,
                        equal_to,
                        has_entries,
                        has_entry,
-                       has_items )
+                       has_items,
+                       is_not )
 from unittest.mock import patch
 from unittest import TestCase
 from pprint import pprint
@@ -149,6 +151,23 @@ void foo() {
                  has_entry( 'message', contains_string( "Expected ';'" ) ) )
 
 
+  @IsolatedYcmd( { 'clangd_args': [ '--clang-tidy=0' ] } )
+  def test_Diagnostics_WarningAndErrorOnSameColumn( self, app ):
+    for col in [ 2, 22 ]:
+      with self.subTest( col = col ):
+        filepath = PathToTestFile( 'diag_ranges', 'detailed_diagnostic.cc' )
+        request = { 'filepath': filepath, 'filetype': 'cpp', 'column_num': col }
+        test = { 'request': request, 'route': '/receive_messages' }
+        RunAfterInitialized( app, test )
+        diag_data = BuildRequest( line_num = 3,
+                                  filepath = filepath,
+                                  filetype = 'cpp' )
+        result = app.post_json( '/detailed_diagnostic', diag_data ).json
+        assert_that( result,
+                     has_entry( 'message',
+                                 contains_string( 'uninitialized' ) ) )
+
+
   @IsolatedYcmd()
   def test_Diagnostics_Multiline( self, app ):
     contents = """
@@ -176,6 +195,33 @@ void foo() {
     results = app.post_json( '/detailed_diagnostic', diag_data ).json
     assert_that( results,
                  has_entry( 'message', contains_string( "\n" ) ) )
+
+
+  @IsolatedYcmd( { 'max_diagnostics_to_display': 0 } )
+  def test_Diagnostics_MultilineNoKind( self, app ):
+    filepath = PathToTestFile( 'foo.cc' )
+    contents = """int main () {
+const int &&
+        /* */
+    rd = 1;
+rd = 4;
+}
+"""
+    request = { 'contents': contents,
+                'filepath': filepath,
+                'filetype': 'cpp' }
+
+    test = { 'request': request, 'route': '/receive_messages' }
+    RunAfterInitialized( app, test )
+
+    diag_data = BuildRequest( line_num = 2,
+                              contents = contents,
+                              filepath = filepath,
+                              filetype = 'cpp' )
+
+    results = app.post_json( '/detailed_diagnostic', diag_data ).json
+    assert_that( results,
+                 has_entry( 'message', is_not( ends_with( ']' ) ) ) )
 
 
   @IsolatedYcmd()

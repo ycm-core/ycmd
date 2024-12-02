@@ -44,10 +44,11 @@ def tearDownModule():
 
 def StartRustCompleterServerInDirectory( app, directory ):
   app.post_json( '/event_notification',
-                 BuildRequest(
-                   filepath = os.path.join( directory, 'src', 'main.rs' ),
-                   event_name = 'FileReadyToParse',
-                   filetype = 'rust' ) )
+                 BuildRequest( filepath = os.path.join( directory,
+                                                        'src',
+                                                        'main.rs' ),
+                               event_name = 'FileReadyToParse',
+                               filetype = 'rust' ) )
   WaitUntilCompleterServerReady( app, 'rust' )
 
 

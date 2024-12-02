@@ -909,3 +909,68 @@ class SubcommandsTest( TestCase ):
               LocationMatcher( filepath, 3, 1 ),
             )
           ) } ) ) } ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToDocumentOutline( self, app ):
+
+    for filepath, expected in [
+      ( PathToTestFile( 'testy', 'Empty.cs' ),
+        ErrorMatcher( RuntimeError, 'No symbols found' ) ),
+      ( PathToTestFile( 'testy', 'SingleEntity.cs' ),
+        LocationMatcher(
+          PathToTestFile( 'testy', 'SingleEntity.cs' ), 6, 8 ) ),
+      ( PathToTestFile( 'testy', 'GotoTestCase.cs' ),
+        has_items(
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 6, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 26, 12 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 30, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 35, 12 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 39, 12 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 43, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 48, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 8, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 13, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 17, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 21, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 27, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 31, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 36, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 40, 8 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 44, 15 ),
+          LocationMatcher(
+            PathToTestFile( 'testy', 'GotoTestCase.cs' ), 49, 15 ) ) )
+    ]:
+      with self.subTest( filepath = filepath, expected = expected ):
+        with WrapOmniSharpServer( app, filepath ):
+
+          # the command name and file are the only relevant arguments for this
+          # subcommand.  our current cursor position in the file doesn't matter.
+          request = BuildRequest( command_arguments = [ 'GoToDocumentOutline' ],
+                                  line_num = 0,
+                                  column_num = 0,
+                                  contents = ReadFile( filepath ),
+                                  filetype = 'cs',
+                                  filepath = filepath )
+
+          response = app.post_json( '/run_completer_command',
+                                    request,
+                                    expect_errors = True ).json
+          print( 'completer response = ', response )
+          assert_that( response, expected )

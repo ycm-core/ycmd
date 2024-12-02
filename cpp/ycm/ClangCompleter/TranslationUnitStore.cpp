@@ -122,8 +122,8 @@ shared_ptr< TranslationUnit > TranslationUnitStore::Get(
 
 bool TranslationUnitStore::Remove( const std::string &filename ) {
   lock_guard< mutex > lock( filename_to_translation_unit_and_flags_mutex_ );
-  Erase( filename_to_flags_hash_, filename );
-  return Erase( filename_to_translation_unit_, filename );
+  filename_to_flags_hash_.erase( filename );
+  return filename_to_translation_unit_.erase( filename );
 }
 
 

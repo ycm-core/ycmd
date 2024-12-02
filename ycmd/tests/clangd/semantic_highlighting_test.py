@@ -1,4 +1,4 @@
-# Copyright (C) 2021 ycmd contributors
+# Copyright (C) 2024 ycmd contributors
 #
 # This file is part of ycmd.
 #
@@ -79,7 +79,7 @@ def RunTest( app, test ):
 
 
 class SignatureHelpTest( TestCase ):
-  @IsolatedYcmd
+  @IsolatedYcmd()
   def test_none( self, app ):
     RunTest( app, {
       'request': {

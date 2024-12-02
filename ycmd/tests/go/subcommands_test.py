@@ -32,7 +32,10 @@ import requests
 
 from ycmd import handlers
 from ycmd.tests.go import setUpModule, tearDownModule # noqa
-from ycmd.tests.go import PathToTestFile, SharedYcmd
+from ycmd.tests.go import ( PathToTestFile,
+                            SharedYcmd,
+                            IsolatedYcmd,
+                            StartGoCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     ErrorMatcher,
@@ -68,7 +71,7 @@ def RunTest( app, test, contents = None ):
   # We also ignore errors here, but then we check the response code
   # ourself. This is to allow testing of requests returning errors.
   response = app.post_json(
-    '/run_completer_command',
+    test.get( 'route', '/run_completer_command' ),
     CombineRequest( test[ 'request' ], {
       'completer_target': 'filetype_default',
       'contents': contents,
@@ -81,13 +84,21 @@ def RunTest( app, test, contents = None ):
 
   print( f'completer response: { pformat( response.json ) }' )
 
-  assert_that( response.status_code,
-               equal_to( test[ 'expect' ][ 'response' ] ) )
-  assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  if 'expect' in test:
+    assert_that( response.status_code,
+                 equal_to( test[ 'expect' ][ 'response' ] ) )
+    assert_that( response.json, test[ 'expect' ][ 'data' ] )
+  return response.json
 
 
-def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
-  RunTest( app, {
+def RunFixItTest( app,
+                  description,
+                  filepath,
+                  line,
+                  col,
+                  fixits_for_line,
+                  chosen_fixit = None ):
+  test = {
     'description': description,
     'request': {
       'command': 'FixIt',
@@ -99,7 +110,43 @@ def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
       'response': requests.codes.ok,
       'data': fixits_for_line,
     }
+  }
+  if chosen_fixit is not None:
+    test_no_expect = test.copy()
+    test_no_expect.pop( 'expect' )
+    response = RunTest( app, test_no_expect )
+    request = test[ 'request' ]
+    request.update( {
+      'fixit': response[ 'fixits' ][ chosen_fixit ]
+    } )
+    test[ 'route' ] = '/resolve_fixit'
+  RunTest( app, test )
+
+
+def RunHierarchyTest( app, kind, direction, location, expected, code ):
+  file, line, column = location
+  request = {
+    'completer_target' : 'filetype_default',
+    'command': f'{ kind.title() }Hierarchy',
+    'line_num'         : line,
+    'column_num'       : column,
+    'filepath'         : file,
+  }
+  test = { 'request': request,
+           'route': '/run_completer_command' }
+  prepare_hierarchy_response = RunTest( app, test )
+  request.update( {
+    'command': f'Resolve{ kind.title() }HierarchyItem',
+    'arguments': [
+      prepare_hierarchy_response[ 0 ],
+      direction
+    ]
   } )
+  test[ 'expect' ] = {
+    'response': code,
+    'data': expected
+  }
+  RunTest( app, test )
 
 
 def RunGoToTest( app, command, test ):
@@ -168,6 +215,8 @@ class SubcommandsTest( TestCase ):
                                       'GoToType',
                                       'GoToSymbol',
                                       'FixIt',
+                                      'CallHierarchy',
+                                      'ResolveCallHierarchyItem',
                                       'RestartServer',
                                       'ExecuteCommand' ) )
 
@@ -202,6 +251,7 @@ class SubcommandsTest( TestCase ):
     Test( app, 'GoTo', [] )
     Test( app, 'GoToDeclaration', [] )
     Test( app, 'GoToDefinition', [] )
+    Test( app, 'CallHierarchy', [] )
     Test( app, 'GoToType', [] )
     Test( app, 'FixIt', [] )
 
@@ -391,15 +441,18 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_GoToImplementation( self, app ):
     for test in [
       # Works
-      { 'req': ( 'thing.go', 3, 8 ),
-        'res': ( 'thing.go', 7, 6 ) },
+      { 'req': ( 'thing.go', 5, 8 ),
+        'res': ( 'thing.go', 9, 6 ) },
       # Fails
-      { 'req': ( 'thing.go', 12, 7 ),
+      { 'req': ( 'thing.go', 10, 1 ),
         'res': 'Cannot jump to location' } ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToImplementation', test )
 
 
+  @ExpectedFailure(
+    'Gopls bug. See https://github.com/golang/go/issues/68904',
+    matches_regexp( 'Browse free symbols' ) )
   @SharedYcmd
   def test_Subcommands_FixIt_NullResponse( self, app ):
     filepath = PathToTestFile( 'td', 'test.go' )
@@ -424,7 +477,7 @@ class SubcommandsTest( TestCase ):
         } ),
       )
     } )
-    RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit )
+    RunFixItTest( app, 'Only one fixit returned', filepath, 1, 1, fixit, 0 )
 
 
   @SharedYcmd
@@ -508,3 +561,121 @@ class SubcommandsTest( TestCase ):
     ]:
       with self.subTest( test = test ):
         RunGoToTest( app, 'GoToCallers', test )
+
+
+  @IsolatedYcmd()
+  def test_Subcommands_GoTo_WorksAfterSwitchingProjects( self, app ):
+    project_dir = PathToTestFile( module_dir = 'go_module_2' )
+    StartGoCompleterServerInDirectory( app, project_dir )
+    go_module_2_main = PathToTestFile( 'main.go', module_dir = 'go_module_2' )
+    thing_go = PathToTestFile( 'thing.go' )
+    td_test_go = PathToTestFile( 'td', 'test.go' )
+    for test in [
+      { 'req': ( go_module_2_main, 6, 3 ),
+        'res': ( go_module_2_main, 3, 6 ) },
+      { 'req': ( thing_go, 12, 8 ),
+        'res': ( td_test_go, 9, 6 ) }
+    ]:
+      with self.subTest( test = test ):
+        RunGoToTest( app, 'GoTo', test )
+
+
+  @SharedYcmd
+  def test_Subcommands_OutgoingCallHierarchy( self, app ):
+    filepath = PathToTestFile( 'hierarchies.go' )
+    for location, response, code in [
+      [ ( filepath, 9, 6 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 13 ) ),
+            'kind': 'Function',
+            'name': 'g'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 12 ) ),
+            'kind': 'Function',
+            'name': 'f'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 6, 6 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 7, 12 ),
+                           LocationMatcher( filepath, 7, 18 ) ),
+            'kind': 'Function',
+            'name': 'f'
+          } ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 3, 6 ),
+        ErrorMatcher( RuntimeError, 'No outgoing calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'outgoing', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_IncomingCallHierarchy( self, app ):
+    filepath = PathToTestFile( 'hierarchies.go' )
+    for location, response, code in [
+      [ ( filepath, 3, 6 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 7, 12 ),
+                           LocationMatcher( filepath, 7, 18 ) ),
+            'root_location': LocationMatcher( filepath, 6, 6 ),
+            'name': 'g',
+            'kind': 'Function'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 11, 12 ) ),
+            'root_location': LocationMatcher( filepath, 9, 6 ),
+            'name': 'h',
+            'kind': 'Function'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 6, 6 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 10, 13 ) ),
+            'root_location': LocationMatcher( filepath, 9, 6 ),
+            'name': 'h',
+            'kind': 'Function'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 9, 6 ),
+        ErrorMatcher( RuntimeError, 'No incoming calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'incoming', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_NoHierarchyFound( self, app ):
+    filepath = PathToTestFile( 'hierarchies.go' )
+    request = {
+      'completer_target' : 'filetype_default',
+      'command': 'CallHierarchy',
+      'line_num'         : 2,
+      'column_num'       : 1,
+      'filepath'         : filepath,
+      'filetype'         : 'go'
+    }
+    test = { 'request': request,
+             'route': '/run_completer_command',
+             'expect': {
+               'response': requests.codes.server_error,
+               'data': ErrorMatcher(
+                   RuntimeError, 'No call hierarchy found.' ) } }
+    RunTest( app, test )

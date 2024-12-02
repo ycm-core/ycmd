@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
-from hamcrest import ( all_of,
-                       assert_that,
+from hamcrest import ( assert_that,
                        has_items,
                        has_key,
-                       is_not )
+                       is_not,
+                       matches_regexp )
 from unittest import TestCase
 
 from ycmd.tests.go import setUpModule, tearDownModule # noqa
@@ -45,16 +45,15 @@ class GetCompletionsTest( TestCase ):
     results = app.post_json( '/completions',
                              completion_data ).json[ 'completions' ]
     assert_that( results,
-                 all_of(
                    has_items(
                      CompletionEntryMatcher(
                        'Llongfile',
                        'int',
                        {
-                         'detailed_info': 'Llongfile\n\n'
+                         'detailed_info': matches_regexp( 'Llongfile\n\n'
                                           'These flags define which text to'
                                           ' prefix to each log entry generated'
-                                          ' by the Logger.',
+                                          ' by the \\[?Logger\\]?\\.' ),
                          'menu_text': 'Llongfile',
                          'kind': 'Constant',
                        }
@@ -70,7 +69,7 @@ class GetCompletionsTest( TestCase ):
                          'menu_text': 'Logger',
                          'kind': 'Struct',
                        }
-                     ) ) ) )
+                     ) ) )
 
 
     # This completer does not require or support resolve

@@ -80,7 +80,7 @@ TEST_P( NormalizationTest, NormalizationFormDecompositionIsConform ) {
 
 
 // Tests generated from
-// https://unicode.org/Public/UCD/latest/ucd/NormalizationTest.txt
+// https://www.unicode.org/Public/UCD/latest/ucd/NormalizationTest.txt
 const NormalizationTuple tests[] = {
 #include "NormalizationCases.inc"
 };

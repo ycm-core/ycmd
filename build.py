@@ -89,13 +89,13 @@ DYNAMIC_PYTHON_LIBRARY_REGEX = """
   )$
 """
 
-JDTLS_MILESTONE = '1.26.0'
-JDTLS_BUILD_STAMP = '202307271613'
+JDTLS_MILESTONE = '1.36.0'
+JDTLS_BUILD_STAMP = '202405301306'
 JDTLS_SHA256 = (
-  'ba5fe5ee3b2a8395287e24aef20ce6e17834cf8e877117e6caacac6a688a6c53'
+  '028e274d06f4a61cad4ffd56f89ef414a8f65613c6d05d9467651b7fb03dae7b'
 )
 
-DEFAULT_RUST_TOOLCHAIN = 'nightly-2023-08-18'
+DEFAULT_RUST_TOOLCHAIN = 'nightly-2024-06-11'
 RUST_ANALYZER_DIR = p.join( DIR_OF_THIRD_PARTY, 'rust-analyzer' )
 
 BUILD_ERROR_MESSAGE = (
@@ -107,48 +107,65 @@ BUILD_ERROR_MESSAGE = (
   'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '17.0.1'
+CLANGD_VERSION = '19.1.0'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
   'or use your system Clangd. '
   'See the YCM docs for details on how to use a custom Clangd.' )
 
+ACCEPTABLE_MSVC_VERSIONS = [ 17, 16, 15 ]
 
-def FindLatestMSVC( quiet ):
-  ACCEPTABLE_VERSIONS = [ 17, 16, 15 ]
 
+def UseVsWhere( quiet, vswhere_args ):
+  if not quiet:
+    print( "Calling", *vswhere_args )
+  latest_full_v = subprocess.check_output( vswhere_args ).strip().decode()
+  if '.' in latest_full_v:
+    try:
+      latest_v = int( latest_full_v.split( '.' )[ 0 ] )
+    except ValueError:
+      raise ValueError( f"{ latest_full_v } is not a version number." )
+
+    if not quiet:
+      print( f'vswhere -latest returned version { latest_full_v }' )
+
+    if latest_v not in ACCEPTABLE_MSVC_VERSIONS:
+      if latest_v > 17:
+        if not quiet:
+          print( f'MSVC Version { latest_full_v } is newer than expected.' )
+      else:
+        raise ValueError(
+          f'vswhere returned { latest_full_v } which is unexpected.'
+          'Pass --msvc <version> argument.' )
+    return latest_v
+  else:
+    if not quiet:
+      print( f'vswhere returned nothing usable: "{ latest_full_v }"' )
+
+  return None
+
+
+def FindLatestMSVC( quiet, preview=False ):
   VSWHERE_EXE = os.path.join( os.environ[ 'ProgramFiles(x86)' ],
                              'Microsoft Visual Studio',
                              'Installer', 'vswhere.exe' )
 
   if os.path.exists( VSWHERE_EXE ):
+    vswhere_args = [ VSWHERE_EXE,
+                     '-latest', '-property', 'installationVersion' ]
+    if preview:
+      vswhere_args.append( '-prerelease' )
+
+    if msvc := UseVsWhere( quiet, vswhere_args ):
+      return msvc
+
     if not quiet:
-      print( "Calling vswhere -latest -installationVersion" )
-    latest_full_v = subprocess.check_output(
-      [ VSWHERE_EXE, '-latest', '-property', 'installationVersion' ]
-    ).strip().decode()
-    if '.' in latest_full_v:
-      try:
-        latest_v = int( latest_full_v.split( '.' )[ 0 ] )
-      except ValueError:
-        raise ValueError( f"{ latest_full_v } is not a version number." )
+      print( 'Retrying vswhere for Build Tools' )
 
-      if not quiet:
-        print( f'vswhere -latest returned version { latest_full_v }' )
-
-      if latest_v not in ACCEPTABLE_VERSIONS:
-        if latest_v > 17:
-          if not quiet:
-            print( f'MSVC Version { latest_full_v } is newer than expected.' )
-        else:
-          raise ValueError(
-            f'vswhere returned { latest_full_v } which is unexpected.'
-            'Pass --msvc <version> argument.' )
-      return latest_v
-    else:
-      if not quiet:
-        print( f'vswhere returned nothing usable, { latest_full_v }' )
+    vswhere_args += [ '-products', 'Microsoft.VisualStudio.Product.BuildTools' ]
+    if msvc := UseVsWhere( quiet, vswhere_args ):
+      return msvc
 
   # Fall back to registry parsing, which works at least until MSVC 2019 (16)
   # but is likely failing on MSVC 2022 (17)
@@ -158,7 +175,7 @@ def FindLatestMSVC( quiet ):
   import winreg
   handle = winreg.ConnectRegistry( None, winreg.HKEY_LOCAL_MACHINE )
   msvc = None
-  for i in ACCEPTABLE_VERSIONS:
+  for i in ACCEPTABLE_MSVC_VERSIONS:
     if not quiet:
       print( 'Trying to find '
              rf'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\{ i }.0' )
@@ -534,6 +551,10 @@ def ParseArguments():
                        action = 'store_true',
                        help = 'Compiling with sudo causes problems. If you'
                               ' know what you are doing, proceed.' )
+  parser.add_argument( '--preview-msvc',
+                       action = 'store_true',
+                       help = 'Allow compiling against latest MSVC Preview'
+                              ' version.' )
 
   # These options are deprecated.
   parser.add_argument( '--omnisharp-completer', action = 'store_true',
@@ -547,6 +568,10 @@ def ParseArguments():
   parser.add_argument( '--js-completer', action = 'store_true',
                        help = argparse.SUPPRESS )
 
+  parser.add_argument( '--regex', action = argparse.BooleanOptionalAction,
+                       default = True,
+                       help = 'Choose whether to build the regex module. '
+                              'Defaults to True.' )
   args = parser.parse_args()
 
   # coverage is not supported for c++ on MSVC
@@ -555,7 +580,7 @@ def ParseArguments():
     args.enable_debug = True
 
   if OnWindows() and args.msvc is None:
-    args.msvc = FindLatestMSVC( args.quiet )
+    args.msvc = FindLatestMSVC( args.quiet, args.preview_msvc )
     if args.msvc is None:
       raise FileNotFoundError( "Could not find a valid MSVC version." )
 
@@ -764,7 +789,7 @@ def BuildRegexModule( script_args ):
   lib_dir = p.join( DIR_OF_THIRD_PARTY, 'regex-build' )
 
   try:
-    os.chdir( p.join( DIR_OF_THIRD_PARTY, 'mrab-regex' ) )
+    os.chdir( p.join( DIR_OF_THIRD_PARTY, 'mrab-regex-github' ) )
 
     RemoveDirectoryIfExists( build_dir )
     RemoveDirectoryIfExists( lib_dir )
@@ -779,8 +804,8 @@ def BuildRegexModule( script_args ):
                  exit_message = 'Failed to build regex module.',
                  quiet = script_args.quiet,
                  status_message = 'Building regex module' )
-    except ImportError:
-      pass # Swallow the error - ycmd will fall back to the standard `re`.
+    except ( ImportError, subprocess.CalledProcessError ):
+      print( 'Building regex module failed. Falling back to re builtin.' )
 
   finally:
     RemoveDirectoryIfExists( build_dir )
@@ -939,7 +964,7 @@ def EnableGoCompleter( args ):
   new_env.pop( 'GOROOT', None )
   new_env[ 'GOBIN' ] = p.join( new_env[ 'GOPATH' ], 'bin' )
 
-  gopls = 'golang.org/x/tools/gopls@v0.13.2'
+  gopls = 'golang.org/x/tools/gopls@v0.16.1'
   CheckCall( [ go, 'install', gopls ],
              env = new_env,
              quiet = args.quiet,
@@ -1145,30 +1170,30 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        '66a1e4d527b451d1e9f21183416fd53ef7f395266bbf7fd74b470ec326d19c98' ),
+        '6f4a14f3f144fc39158a7088528e3c8ffa20df516404c319e42351c27dfff063' ),
       ( 'clangd-{version}-win32',
-        'c4c351da9f528a2cfacbc669cfb656ef34791ed637aeed051274adf611f3ba5a' ) ]
+        '4278d11bebd7c60b945c7aa7457a82e707eeb488d24acdccdc3e354b36b808be' ) ]
   if OnMac():
     if OnArm():
       return [
         ( 'clangd-{version}-arm64-apple-darwin',
-          '38b0335306193cfe7978af9b2bb9dffc48406739b23f19158e7f000f910df5b0' ) ]
+          'b65d43dc82f47a68c8faf6d9711f54a29da9f25c39c3f138466c874359e5efe8' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        'e3dcbefda4a10d7e1e2f8ce8db820219d78ac48ade247048fc0c6a821105ca26' ) ]
+        'f3da3d4c97d1f8526299f2c64aaa0dbdeff5daad4e07a1937ad1d81b6407d143' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        'a3074a5d3c955b3326881617d36438e2cf36140d8de4b5f7d98e73eda92797a8' ) ]
+        'c279514021924c04b0b810bf79adb3cd5d7f061acb3c4b43e4c445671b3d2a18' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        'f167c13d3741ad7869a6ee57621af2cb9c2477bb300ab2fac91ea64c19f8df43' ) ]
+        'f561e33a90f2053d12202d4a06477c30bf831082c01c228f1935403632bbfa81' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '70a9cf4c9e288941f0193dbfe0ab164e1805b622c2df522ea7319dabdeae3b4c' ) ]
+        '93319be9a2ec662be57f7ce77463ac706ae4f559744f05f7cae4da3350a154b5' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )
@@ -1280,8 +1305,12 @@ def DoCmakeBuilds( args ):
   BuildYcmdLib( cmake, cmake_common_args, args )
   WritePythonUsedDuringBuild()
 
-  BuildRegexModule( args )
   BuildWatchdogModule( args )
+
+  # NOTE: Keep BuildRegexModule() as the final step.
+  # If it fails, at least everything mandatory has been built.
+  if args.regex:
+    BuildRegexModule( args )
 
 
 def PrintReRunMessage():

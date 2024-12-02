@@ -2365,6 +2365,21 @@
             messages are typically multiple lines (such as the documentation and
             signature for a method) and are best displayed in a panel or preview
             area (or equivalent).</li>
+            <li>A <em>Hierarchy</em> response. This is identified where the type of the
+            response is a list of objects containing <code>kind</code> and <code>locations</code>
+            properties.
+            Hierarchy requests work similarly to those in the LSP specification.
+            If a completer supports call/type hierarchies, the initial request
+            should be sent through <code>TypeHierarchy</code>/<code>CallHierarchy</code> subcommand.
+            Resolving any item in the hierarchy tree is done by subsequent
+            <code>ResolveCallHierarchyItem</code> and <code>ResolveTypeHierarchyItem</code> requests.
+            When resolving a hierarchy item, the arguments following
+            the subcommand name are the item being resolved and the direction in
+            which the item should be resolved.
+            For call hierarchies, the directions are <code>incoming</code> and <code>outgoing</code>.
+            For type hierarchies, the directions are <code>subtypes</code> and <code>supertypes</code>.
+            Note that, except for the root node of the hierarchy, resolving an
+            item in both directions is discouraged.</li>
             <li>A <em>GoTo</em> response. This is identified where the response type cannot
             be determined by any of the above methods. A GoTo response may contain
             either a single location (e.g. for <code>GoToDeclaration</code>), or a list of
@@ -4524,6 +4539,153 @@
                                     </section>
                     </div>
                 </div>        
+                <div id="definition-Hierarchy" class="panel panel-definition">
+                        <div class="panel-heading">
+                                <h3 class="panel-title"><a name="/definitions/Hierarchy"></a>Hierarchy:
+                                    <span class="json-property-type">
+                <span class="json-property-type">object</span>
+                <span class="json-property-range" title="Value limits"></span>
+                
+                </span>
+                                </h3>
+                        </div>
+                    <div class="panel-body">
+                                <section class="json-schema-description">
+                                    <p>An object returned, in a list, as a response to hierarchy requests.
+                            The object may contain additional properties, which are used to identify
+                            the hierarchy tree node, by the subservers.</p>
+                            
+                                </section>
+                            
+                                    <section class="json-schema-properties">
+                                        <dl>
+                                                <dt data-property-name="kind">
+                                                    <span class="json-property-name">kind:</span>
+                                                    
+                                                    <span class="json-property-type">string</span>    <span class="json-property-enum" title="Possible values">, x &isin; {
+                                                                    <span class="json-property-enum-item">File</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Module</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Namespace</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Package</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Class</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Method</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Property</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Field</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Constructor</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Enum</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Interface</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Function</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Variable</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Constant</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">String</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Number</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Boolean</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Array</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Object</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Key</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item"></span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">EnumMember</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Struct</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Event</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">Operator</span>
+                                                                ,
+                                                                    <span class="json-property-enum-item">TypeParameter</span>
+                                                                
+                                                            }
+                                                            </span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                        <span class="json-property-required"></span>
+                                                </dt>
+                                                <dd>
+                                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="locations">
+                                                    <span class="json-property-name">locations:</span>
+                                                    
+                                                    <span class="json-property-type">object[]</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                        <span class="json-property-required"></span>
+                                                </dt>
+                                                <dd>
+                                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                                        <section class="json-schema-array-items">
+                                                                            
+                                                                            <span class="json-property-type">    <a class="json-schema-ref" href="#/defintions/Location">#/defintions/Location</a>
+                                                                            </span>
+                                                                            <span class="json-property-range" title="Value limits"></span>
+                                                                            
+                                                                            <div class="json-inner-schema">
+                                                                                
+                                                                            </div>
+                                                                        </section>                </div>
+                                                </dd>
+                                                <dt data-property-name="name">
+                                                    <span class="json-property-name">name:</span>
+                                                    
+                                                    <span class="json-property-type">string</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                        <span class="json-property-required"></span>
+                                                </dt>
+                                                <dd>
+                                                    <p>The name of the symbol represented by the hierarchy item.</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="root_location">
+                                                    <span class="json-property-name">root_location:</span>
+                                                    
+                                                    <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/Location">Location</a>
+                                                    </span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>In call hierarchies, it is useful to differentiate between the call
+                                    site (which end up in the <code>locations</code> property) and the calling
+                                    function. This property, if present, represents the latter.</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                        </dl>
+                                    </section>
+                    </div>
+                </div>        
                 <div id="definition-InlayHint" class="panel panel-definition">
                         <div class="panel-heading">
                                 <h3 class="panel-title"><a name="/definitions/InlayHint"></a>InlayHint:
@@ -4548,6 +4710,8 @@
                                                     <span class="json-property-name">kind:</span>
                                                     
                                                     <span class="json-property-type">string</span>    <span class="json-property-enum" title="Possible values">, x &isin; {
+                                                                    <span class="json-property-enum-item">Unknown</span>
+                                                                ,
                                                                     <span class="json-property-enum-item">Type</span>
                                                                 ,
                                                                     <span class="json-property-enum-item">Parameter</span>
@@ -5443,6 +5607,38 @@
                                                     <p>If present, this is a single <em>GoTo response</em> and this value
                                     contains the absolute path of the buffer containing the
                                     target location (identified in <code>line_num</code> and <code>column_num</code>).</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="kind">
+                                                    <span class="json-property-name">kind:</span>
+                                                    
+                                                    <span class="json-property-type">string</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>If present, this is a <em>Hierarchy response</em> and this value
+                                    describes the kind of symbol a node in the call/type hierarchy
+                                    tree is referring to.</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="locations">
+                                                    <span class="json-property-name">locations:</span>
+                                                    
+                                                    <span class="json-property-type">object[]</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>If present, this is a <em>Hierarchy response</em> and this value
+                                    contains a list of locations that a node in the call/type
+                                    hierarchy tree is referring to.</p>
                                     
                                                     <div class="json-inner-schema">
                                                         

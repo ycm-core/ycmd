@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from functools import partial
+from pathlib import Path
 import abc
 import collections
 import contextlib
@@ -620,7 +621,7 @@ class LanguageServerConnection( threading.Thread ):
       elif method == 'workspace/workspaceFolders':
         self.SendResponse(
           lsp.Accept( request,
-                      lsp.WorkspaceFolders( self._project_directory ) ) )
+                      lsp.WorkspaceFolders( *self._server_workspace_dirs ) ) )
       else: # method unknown - reject
         self.SendResponse( lsp.Reject( request, lsp.Errors.MethodNotFound ) )
       return
@@ -890,6 +891,7 @@ class LanguageServerCompleter( Completer ):
       - ConvertNotificationToMessage
       - GetCompleterName
       - GetProjectDirectory
+      - GetWorkspaceForFilepath
       - GetProjectRootFiles
       - GetTriggerCharacters
       - GetDefaultNotificationHandler
@@ -1005,7 +1007,8 @@ class LanguageServerCompleter( Completer ):
     self._on_file_ready_to_parse_handlers = []
     self.RegisterOnFileReadyToParse(
       lambda self, request_data:
-        self._UpdateServerWithFileContents( request_data )
+        self._UpdateServerWithFileContents( request_data ),
+      True # once
     )
 
     self._signature_help_disabled = user_options[ 'disable_signature_help' ]
@@ -1042,12 +1045,14 @@ class LanguageServerCompleter( Completer ):
     self._initialize_event = threading.Event()
     self._on_initialize_complete_handlers = []
     self._server_capabilities = None
+    self._workspace_notification_supported = False
     self._is_completion_provider = False
     self._resolve_completion_items = False
     self._project_directory = None
     self._settings = {}
     self._extra_conf_dir = None
     self._semantic_token_atlas = None
+    self._server_workspace_dirs = set()
 
 
   def GetCompleterName( self ):
@@ -1075,6 +1080,7 @@ class LanguageServerCompleter( Completer ):
                  self.GetCommandLine() )
 
     self._project_directory = self.GetProjectDirectory( request_data )
+    self._server_workspace_dirs.add( self._project_directory )
 
     if self._connection_type == 'tcp':
       if self.GetCommandLine():
@@ -1235,6 +1241,9 @@ class LanguageServerCompleter( Completer ):
   def _RestartServer( self, request_data, *args, **kwargs ):
     self.Shutdown()
     self._StartAndInitializeServer( request_data, *args, **kwargs )
+    self._OnInitializeComplete(
+      lambda self: self._UpdateServerWithFileContents( request_data )
+    )
 
 
   def _ServerIsInitialized( self ):
@@ -1655,9 +1664,14 @@ class LanguageServerCompleter( Completer ):
       return responses.BuildDisplayMessageResponse(
           'No diagnostics for current file.' )
 
+    # Prefer errors to warnings and warnings to infos.
+    diagnostics.sort( key = lambda d: d[ 'severity' ] )
+
+    # request_data uses 1-based offsets, but LSP diagnostics use 0-based.
+    # It's easier to shift this one offset by -1 than to shift all diag ranges.
     current_column = lsp.CodepointsToUTF16CodeUnits(
         GetFileLines( request_data, current_file )[ current_line_lsp ],
-        request_data[ 'column_codepoint' ] )
+        request_data[ 'column_codepoint' ] ) - 1
     minimum_distance = None
 
     message = 'No diagnostics for current line.'
@@ -1670,6 +1684,12 @@ class LanguageServerCompleter( Completer ):
       distance = _DistanceOfPointToRange( point, diagnostic[ 'range' ] )
       if minimum_distance is None or distance < minimum_distance:
         message = diagnostic[ 'message' ]
+        try:
+          code = diagnostic[ 'code' ]
+          message += f' [{ code }]' # noqa
+        except KeyError:
+          pass
+
         if distance == 0:
           break
         minimum_distance = distance
@@ -1768,6 +1788,18 @@ class LanguageServerCompleter( Completer ):
 
     if ( self._server_capabilities and
          _IsCapabilityProvided( self._server_capabilities,
+                                'typeHierarchyProvider' ) ):
+      commands[ 'TypeHierarchy' ] = (
+        lambda self, request_data, args:
+            self.InitialHierarchy( request_data, [ 'type' ] )
+      )
+      commands[ 'ResolveTypeHierarchyItem' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ *args, 'type' ] )
+      )
+
+    if ( self._server_capabilities and
+         _IsCapabilityProvided( self._server_capabilities,
                                 'callHierarchyProvider' ) ):
       commands[ 'GoToCallees' ] = (
         lambda self, request_data, args:
@@ -1776,6 +1808,14 @@ class LanguageServerCompleter( Completer ):
       commands[ 'GoToCallers' ] = (
         lambda self, request_data, args:
             self.CallHierarchy( request_data, [ 'incoming' ] )
+      )
+      commands[ 'CallHierarchy' ] = (
+        lambda self, request_data, args:
+            self.InitialHierarchy( request_data, [ 'call' ] )
+      )
+      commands[ 'ResolveCallHierarchyItem' ] = (
+        lambda self, request_data, args:
+            self.Hierarchy( request_data, [ *args, 'call' ] )
       )
 
     commands.update( self.GetCustomSubcommands() )
@@ -1892,6 +1932,12 @@ class LanguageServerCompleter( Completer ):
     if not self.ServerIsHealthy():
       return
 
+    def ClearOneshotHandlers():
+      self._on_file_ready_to_parse_handlers = [
+        ( handler, once ) for handler, once
+        in self._on_file_ready_to_parse_handlers if not once
+      ]
+
     # If we haven't finished initializing yet, we need to queue up all functions
     # registered on the FileReadyToParse event and in particular
     # _UpdateServerWithFileContents in reverse order of registration. This
@@ -1899,13 +1945,17 @@ class LanguageServerCompleter( Completer ):
     # messages. This is important because server start up can be quite slow and
     # we must not block the user, while we must keep the server synchronized.
     if not self._initialize_event.is_set():
-      for handler in reversed( self._on_file_ready_to_parse_handlers ):
+      for handler, _ in reversed( self._on_file_ready_to_parse_handlers ):
         self._OnInitializeComplete( partial( handler,
                                              request_data = request_data ) )
+      ClearOneshotHandlers()
       return
 
-    for handler in reversed( self._on_file_ready_to_parse_handlers ):
+    for handler, _ in reversed( self._on_file_ready_to_parse_handlers ):
       handler( self, request_data )
+    ClearOneshotHandlers()
+
+    self._UpdateServerWithFileContents( request_data )
 
     # Return the latest diagnostics that we have received.
     #
@@ -2127,6 +2177,14 @@ class LanguageServerCompleter( Completer ):
                   action )
 
     if action == lsp.ServerFileState.OPEN_FILE:
+      # First check if we need to inform the server of a new workspace.
+      if self._workspace_notification_supported:
+        workspace_for_file = self.GetWorkspaceForFilepath( file_name )
+        if workspace_for_file not in self._server_workspace_dirs:
+          self._server_workspace_dirs.add( workspace_for_file )
+          msg = lsp.DidChangeWorkspaceFolders( workspace_for_file )
+          self.GetConnection().SendNotification( msg )
+
       msg = lsp.DidOpenTextDocument( file_state, file_types, contents )
 
       self.GetConnection().SendNotification( msg )
@@ -2249,8 +2307,8 @@ class LanguageServerCompleter( Completer ):
 
 
   def GetProjectRootFiles( self ):
-    """Returns a list of files that indicate the root of the project.
-    It should be easier to override just this method than the whole
+    """Returns a list of globs matching files that indicate the root of the
+    project.  It should be easier to override just this method than the whole
     GetProjectDirectory."""
     return []
 
@@ -2263,7 +2321,7 @@ class LanguageServerCompleter( Completer ):
       - If the user specified 'project_directory' in their extra conf
         'Settings', use that.
       - try to find files from GetProjectRootFiles and use the
-        first directory from there
+        first directory from there. (From GetWorkspaceForFilepath)
       - if there's an extra_conf file, use that directory
       - otherwise if we know the client's cwd, use that
       - otherwise use the directory of the file that we just opened
@@ -2278,12 +2336,10 @@ class LanguageServerCompleter( Completer ):
       return utils.AbsolutePath( self._settings[ 'project_directory' ],
                                   self._extra_conf_dir )
 
-    project_root_files = self.GetProjectRootFiles()
-    if project_root_files:
-      for folder in utils.PathsToAllParentFolders( request_data[ 'filepath' ] ):
-        for root_file in project_root_files:
-          if os.path.isfile( os.path.join( folder, root_file ) ):
-            return folder
+    filepath = request_data[ 'filepath' ]
+    workspace_path = self.GetWorkspaceForFilepath( filepath, strict = True )
+    if workspace_path:
+      return workspace_path
 
     if self._extra_conf_dir:
       return self._extra_conf_dir
@@ -2291,7 +2347,25 @@ class LanguageServerCompleter( Completer ):
     if 'working_dir' in request_data:
       return request_data[ 'working_dir' ]
 
-    return os.path.dirname( request_data[ 'filepath' ] )
+    return os.path.dirname( filepath )
+
+
+  def GetWorkspaceForFilepath( self, filepath, strict = False ):
+    """Return the workspace of the provided filepath. This could be a subproject
+    or a completely unrelated project to the root directory.
+    Like GetProjectDirectory, can be overridden by a concrete LSP completer.
+    By default we try to find the first parent directory that contains any file
+    mentioned in GetProjectRootFiles().
+    `strict` function argument was useful for allowing GetProjectDirectory to
+    reuse this implementation.
+    """
+    project_root_files = self.GetProjectRootFiles()
+    if project_root_files:
+      for folder in utils.PathsToAllParentFolders( filepath ):
+        for root_file in project_root_files:
+          if next( Path( folder ).glob( root_file ), [] ):
+            return folder
+    return None if strict else os.path.dirname( filepath )
 
 
   def _SendInitialize( self, request_data ):
@@ -2313,10 +2387,14 @@ class LanguageServerCompleter( Completer ):
       # the settings on the Initialize request are somehow subtly different from
       # the settings supplied in didChangeConfiguration, though it's not exactly
       # clear how/where that is specified.
+      self._server_workspace_dirs.update( self._settings.get(
+                                          'additional_workspace_dirs',
+                                          [] ) )
       msg = lsp.Initialize( request_id,
                             self._project_directory,
                             self.ExtraCapabilities(),
-                            self._settings.get( 'ls', {} ) )
+                            self._settings.get( 'ls', {} ),
+                            self._server_workspace_dirs )
 
       def response_handler( response, message ):
         if message is None:
@@ -2362,6 +2440,9 @@ class LanguageServerCompleter( Completer ):
     when the initialize request receives a response."""
     with self._server_info_mutex:
       self._server_capabilities = response[ 'result' ][ 'capabilities' ]
+      self._workspace_notification_supported = (
+        _ServerSupportsWorkspaceFoldersChangeNotif(
+          self._server_capabilities ) )
       self._resolve_completion_items = self._ShouldResolveCompletionItems()
 
       if self._resolve_completion_items:
@@ -2474,8 +2555,8 @@ class LanguageServerCompleter( Completer ):
     self._on_initialize_complete_handlers.append( handler )
 
 
-  def RegisterOnFileReadyToParse( self, handler ):
-    self._on_file_ready_to_parse_handlers.append( handler )
+  def RegisterOnFileReadyToParse( self, handler, once=False ):
+    self._on_file_ready_to_parse_handlers.append( ( handler, once ) )
 
 
   def GetHoverResponse( self, request_data ):
@@ -2510,9 +2591,7 @@ class LanguageServerCompleter( Completer ):
     except ResponseFailedException:
       result = None
 
-    if not result:
-      raise RuntimeError( 'Cannot jump to location' )
-    if not isinstance( result, list ):
+    if result and not isinstance( result, list ):
       return [ result ]
     return result
 
@@ -2527,15 +2606,18 @@ class LanguageServerCompleter( Completer ):
 
     self._UpdateServerWithFileContents( request_data )
 
-    if len( handlers ) == 1:
-      result = self._GoToRequest( request_data, handlers[ 0 ] )
-    else:
-      for handler in handlers:
-        result = self._GoToRequest( request_data, handler )
-        if len( result ) > 1 or not _CursorInsideLocation( request_data,
-                                                           result[ 0 ] ):
-          break
+    result = []
+    for handler in handlers:
+      new_result = self._GoToRequest( request_data, handler )
+      if new_result:
+        result = new_result
+      if len( result ) > 1 or ( result and
+                                not _CursorInsideLocation( request_data,
+                                                           result[ 0 ] ) ):
+        break
 
+    if not result:
+      raise RuntimeError( 'Cannot jump to location' )
     return _LocationListToGoTo( request_data, result )
 
 
@@ -2557,7 +2639,7 @@ class LanguageServerCompleter( Completer ):
       REQUEST_TIMEOUT_COMMAND )
 
     result = response.get( 'result' ) or []
-    return _SymbolInfoListToGoTo( request_data, result )
+    return _LspSymbolListToGoTo( request_data, result )
 
 
   def GoToDocumentOutline( self, request_data ):
@@ -2574,13 +2656,103 @@ class LanguageServerCompleter( Completer ):
 
     result = response.get( 'result' ) or []
 
-    # We should only receive SymbolInformation (not DocumentSymbol)
     if any( 'range' in s for s in result ):
-      raise ValueError(
-        "Invalid server response; DocumentSymbol not supported" )
+      LOGGER.debug( 'Hierarchical DocumentSymbol not supported.' )
+      result = _FlattenDocumentSymbolHierarchy( result )
 
-    return _SymbolInfoListToGoTo( request_data, result )
+    return _LspSymbolListToGoTo( request_data, result )
 
+
+  def InitialHierarchy( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    kind = args[ 0 ]
+
+    self._UpdateServerWithFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.PrepareHierarchy( request_id, request_data, kind.title() )
+    prepare_response = self.GetConnection().GetResponse(
+        request_id,
+        message,
+        REQUEST_TIMEOUT_COMMAND )
+    preparation_item = prepare_response.get( 'result' ) or []
+    if not preparation_item:
+      raise RuntimeError( f'No { kind } hierarchy found.' )
+
+    assert len( preparation_item ) == 1, (
+             'Not available: Multiple hierarchies were received, '
+             'this is not currently supported.' )
+
+    preparation_item[ 0 ][ 'locations' ] = [
+      responses.BuildGoToResponseFromLocation(
+        *_LspLocationToLocationAndDescription( request_data,
+                                               location,
+                                               'selectionRange' ) )
+      for location in preparation_item ]
+    kind_string = lsp.SYMBOL_KIND[ preparation_item[ 0 ][ 'kind' ] ]
+    preparation_item[ 0 ][ 'kind' ] = kind_string
+    return preparation_item
+
+
+  def Hierarchy( self, request_data, args ):
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    preparation_item, direction, kind = args
+
+    if item := ( preparation_item.get( 'from' ) or
+                 preparation_item.get( 'to' ) ):
+      preparation_item = item
+    else:
+      del preparation_item[ 'locations' ]
+      kind_number = lsp.SYMBOL_KIND.index( preparation_item[ 'kind' ] )
+      preparation_item[ 'kind' ] = kind_number
+
+    if kind == 'call':
+      direction += 'Calls'
+    self._UpdateServerWithFileContents( request_data )
+    request_id = self.GetConnection().NextRequestId()
+    message = lsp.Hierarchy( request_id, kind, direction, preparation_item )
+    response = self.GetConnection().GetResponse( request_id,
+                                                 message,
+                                                 REQUEST_TIMEOUT_COMMAND )
+
+    result = response.get( 'result' )
+    if result:
+      for item in result:
+        if kind == 'call':
+          name_and_kind_key = 'to' if direction == 'outgoingCalls' else 'from'
+          hierarchy_item = item[ name_and_kind_key ]
+          kind_string = lsp.SYMBOL_KIND[ hierarchy_item[ 'kind' ] ]
+          item[ 'kind' ] = kind_string
+          item[ 'name' ] = hierarchy_item[ 'name' ]
+          lsp_locations = [ {
+            'uri': hierarchy_item[ 'uri' ],
+            'range': r }
+            for r in item[ 'fromRanges' ] ]
+          item[ 'locations' ] = [
+            responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data, location ) )
+            for location in lsp_locations ]
+
+          if direction == 'incomingCalls':
+            item[ 'root_location' ] = responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data,
+                                                     hierarchy_item,
+                                                     'selectionRange' ) )
+        else:
+          item[ 'kind' ] = lsp.SYMBOL_KIND[ item[ 'kind' ] ]
+          item[ 'locations' ] = [
+            responses.BuildGoToResponseFromLocation(
+              *_LspLocationToLocationAndDescription( request_data, location ) )
+            for location in [ item ] ]
+      return result
+    if kind == 'call':
+      raise RuntimeError(
+          f'No { direction.rstrip( "Calls" ) } { kind }s found.' )
+    else:
+      raise RuntimeError( f'No { direction } found.' )
 
 
   def CallHierarchy( self, request_data, args ):
@@ -2589,7 +2761,7 @@ class LanguageServerCompleter( Completer ):
 
     self._UpdateServerWithFileContents( request_data )
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.PrepareCallHierarchy( request_id, request_data )
+    message = lsp.PrepareHierarchy( request_id, request_data, 'Call' )
     prepare_response = self.GetConnection().GetResponse(
         request_id,
         message,
@@ -2605,7 +2777,10 @@ class LanguageServerCompleter( Completer ):
     preparation_item = preparation_item[ 0 ]
 
     request_id = self.GetConnection().NextRequestId()
-    message = lsp.CallHierarchy( request_id, args[ 0 ], preparation_item )
+    message = lsp.Hierarchy( request_id,
+                             'call',
+                             args[ 0 ] + 'Calls',
+                             preparation_item )
     response = self.GetConnection().GetResponse( request_id,
                                                  message,
                                                  REQUEST_TIMEOUT_COMMAND )
@@ -2675,7 +2850,6 @@ class LanguageServerCompleter( Completer ):
                       cursor_range_ls,
                       matched_diagnostics ),
       REQUEST_TIMEOUT_COMMAND )
-
     return self.CodeActionResponseToFixIts( request_data,
                                             code_actions[ 'result' ] )
 
@@ -2686,28 +2860,22 @@ class LanguageServerCompleter( Completer ):
 
     fixits = []
     for code_action in code_actions:
-      if 'edit' in code_action:
-        # TODO: Start supporting a mix of WorkspaceEdits and Commands
-        # once there's a need for such
-        assert 'command' not in code_action
-
-        # This is a WorkspaceEdit literal
-        fixits.append( self.CodeActionLiteralToFixIt( request_data,
-                                                      code_action ) )
+      capabilities = self._server_capabilities[ 'codeActionProvider' ]
+      if ( ( isinstance( capabilities, dict ) and
+             capabilities.get( 'resolveProvider' ) ) or
+           'command' in code_action ):
+        # If server is a code action resolve provider, either we are obligated
+        # to resolve, or we have a command in the code action response.
+        # If server does not want us to resolve, but sends a command anyway,
+        # we still need to lazily execute that command.
+        fixits.append( responses.UnresolvedFixIt( code_action,
+                                                  code_action[ 'title' ],
+                                                  code_action.get( 'kind' ) ) )
         continue
+      # No resoving here - just a simple code action literal.
+      fixits.append( self.CodeActionLiteralToFixIt( request_data,
+                                                    code_action ) )
 
-      # Either a CodeAction or a Command
-      assert 'command' in code_action
-
-      action_command = code_action[ 'command' ]
-      if isinstance( action_command, dict ):
-        # CodeAction with a 'command' rather than 'edit'
-        fixits.append( self.CodeActionCommandToFixIt( request_data,
-                                                      code_action ) )
-        continue
-
-      # It is a Command
-      fixits.append( self.CommandToFixIt( request_data, code_action ) )
 
     # Show a list of actions to the user to select which one to apply.
     # This is (probably) a more common workflow for "code action".
@@ -2811,10 +2979,44 @@ class LanguageServerCompleter( Completer ):
 
 
   def _ResolveFixit( self, request_data, fixit ):
-    if not fixit[ 'resolve' ]:
-      return { 'fixits': [ fixit ] }
+    code_action = fixit[ 'command' ]
+    capabilities = self._server_capabilities[ 'codeActionProvider' ]
+    if ( isinstance( capabilities, dict ) and
+         capabilities.get( 'resolveProvider' ) ):
+      # Resolve through codeAction/resolve request, before resolving commands.
+      # If the server is an asshole, it might be a code action resolve
+      # provider, but send a LSP Command instead. We can not resolve those with
+      # codeAction/resolve!
+      if ( 'command' not in code_action or
+           isinstance( code_action[ 'command' ], str ) ):
+        request_id = self.GetConnection().NextRequestId()
+        msg = lsp.CodeActionResolve( request_id, code_action )
+        code_action = self.GetConnection().GetResponse(
+            request_id,
+            msg,
+            REQUEST_TIMEOUT_COMMAND )[ 'result' ]
 
-    unresolved_fixit = fixit[ 'command' ]
+    result = []
+    if 'edit' in code_action:
+      result.append( self.CodeActionLiteralToFixIt( request_data,
+                                                    code_action ) )
+
+    if 'command' in code_action:
+      assert not result, 'Code actions with edit and command is not supported.'
+      if isinstance( code_action[ 'command' ], str ):
+        unresolved_command_fixit = self.CommandToFixIt( request_data,
+                                                        code_action )
+      else:
+        unresolved_command_fixit = self.CodeActionCommandToFixIt( request_data,
+                                                                  code_action )
+      result.append( self._ResolveFixitCommand( request_data,
+                                                unresolved_command_fixit ) )
+
+    return responses.BuildFixItResponse( result )
+
+
+  def _ResolveFixitCommand( self, request_data, fixit ):
+    unresolved_fixit = fixit.command
     collector = EditCollector()
     with self.GetConnection().CollectApplyEdits( collector ):
       self.GetCommandResponse(
@@ -2826,19 +3028,23 @@ class LanguageServerCompleter( Completer ):
     response = collector.requests
     assert len( response ) < 2
     if not response:
-      return responses.BuildFixItResponse( [ responses.FixIt(
+      return responses.FixIt(
         responses.Location( request_data[ 'line_num' ],
                             request_data[ 'column_num' ],
                             request_data[ 'filepath' ] ),
-        [] ) ] )
+        [] )
     fixit = WorkspaceEditToFixIt(
       request_data,
       response[ 0 ][ 'edit' ],
       unresolved_fixit[ 'title' ] )
-    return responses.BuildFixItResponse( [ fixit ] )
+    return fixit
 
 
   def ResolveFixit( self, request_data ):
+    fixit = request_data[ 'fixit' ]
+    if 'command' not in fixit:
+      # Somebody has sent us an already resolved fixit.
+      return { 'fixits': [ fixit ] }
     return self._ResolveFixit( request_data, request_data[ 'fixit' ] )
 
 
@@ -2904,6 +3110,8 @@ class LanguageServerCompleter( Completer ):
                                       ServerStateDescription() ),
              responses.DebugInfoItem( 'Project Directory',
                                       self._project_directory ),
+             responses.DebugInfoItem( 'Open Workspaces',
+                                      self._server_workspace_dirs ),
              responses.DebugInfoItem(
                'Settings',
                json.dumps( self._settings.get( 'ls', {} ),
@@ -2922,13 +3130,15 @@ def _DistanceOfPointToRange( point, range ):
   # Single-line range.
   if start[ 'line' ] == end[ 'line' ]:
     # 0 if point is within range, otherwise distance from start/end.
-    return max( 0, point[ 'character' ] - end[ 'character' ],
+    # +1 takes into account that, visually, end is one character farther.
+    return max( 0, point[ 'character' ] - end[ 'character' ] + 1,
                 start[ 'character' ] - point[ 'character' ] )
 
   if start[ 'line' ] == point[ 'line' ]:
     return max( 0, start[ 'character' ] - point[ 'character' ] )
   if end[ 'line' ] == point[ 'line' ]:
-    return max( 0, point[ 'character' ] - end[ 'character' ] )
+    # +1 takes into account that, visually, end is one character farther.
+    return max( 0, point[ 'character' ] - end[ 'character' ] + 1 )
   # If not on the first or last line, then point is within range for sure.
   return 0
 
@@ -3186,26 +3396,10 @@ def _LocationListToGoTo( request_data, positions ):
     raise RuntimeError( 'Cannot jump to location' )
 
 
-def _SymbolInfoListToGoTo( request_data, symbols ):
+def _LspSymbolListToGoTo( request_data, symbols ):
   """Convert a list of LSP SymbolInformation into a YCM GoTo response"""
 
-  def BuildGoToLocationFromSymbol( symbol ):
-    location, line_value = _LspLocationToLocationAndDescription(
-      request_data,
-      symbol[ 'location' ] )
-
-    description = ( f'{ lsp.SYMBOL_KIND[ symbol[ "kind" ] ] }: '
-                    f'{ symbol[ "name" ] }' )
-
-    goto = responses.BuildGoToResponseFromLocation( location,
-                                                    description )
-    goto[ 'extra_data' ] = {
-      'kind': lsp.SYMBOL_KIND[ symbol[ 'kind' ] ],
-      'name': symbol[ 'name' ],
-    }
-    return goto
-
-  locations = [ BuildGoToLocationFromSymbol( s ) for s in
+  locations = [ _BuildGoToLocationFromSymbol( s, request_data ) for s in
                 sorted( symbols,
                         key = lambda s: ( s[ 'kind' ], s[ 'name' ] ) ) ]
 
@@ -3217,7 +3411,41 @@ def _SymbolInfoListToGoTo( request_data, symbols ):
     return locations
 
 
-def _LspLocationToLocationAndDescription( request_data, location ):
+def _FlattenDocumentSymbolHierarchy( symbols ):
+  result = []
+  for s in symbols:
+    result.append( s )
+    if children := s.get( 'children' ):
+      result.extend( _FlattenDocumentSymbolHierarchy( children ) )
+  return result
+
+
+def _BuildGoToLocationFromSymbol( symbol, request_data ):
+  """ Convert a LSP SymbolInfo or DocumentSymbol into a YCM GoTo response"""
+  lsp_location = symbol.get( 'location' )
+  if not lsp_location: # This is a DocumentSymbol
+    lsp_location = symbol
+    lsp_location[ 'uri' ] = lsp.FilePathToUri( request_data[ 'filepath' ] )
+
+  location, line_value = _LspLocationToLocationAndDescription(
+    request_data,
+    lsp_location )
+
+  description = ( f'{ lsp.SYMBOL_KIND[ symbol[ "kind" ] ] }: '
+                  f'{ symbol[ "name" ] }' )
+
+  goto = responses.BuildGoToResponseFromLocation( location,
+                                                  description )
+  goto[ 'extra_data' ] = {
+    'kind': lsp.SYMBOL_KIND[ symbol[ 'kind' ] ],
+    'name': symbol[ 'name' ],
+  }
+  return goto
+
+
+def _LspLocationToLocationAndDescription( request_data,
+                                          location,
+                                          range_property = 'range' ):
   """Convert a LSP Location to a ycmd location."""
   try:
     filename = lsp.UriToFilePath( location[ 'uri' ] )
@@ -3234,9 +3462,10 @@ def _LspLocationToLocationAndDescription( request_data, location ):
                       'GoTo location' )
     file_contents = []
 
+  range = location[ range_property ]
   return _BuildLocationAndDescription( filename,
                                        file_contents,
-                                       location[ 'range' ][ 'start' ] )
+                                       range[ 'start' ] )
 
 
 def _LspToYcmdLocation( file_contents, location ):
@@ -3542,6 +3771,12 @@ def _DecodeSemanticTokens( atlas, token_data, filename, contents ):
     last_token = token
 
   return tokens
+
+
+def _ServerSupportsWorkspaceFoldersChangeNotif( server_capabilities ):
+  workspace = server_capabilities.get( 'workspace', {} )
+  workspace_folders = workspace.get( 'workspaceFolders', {} )
+  return _IsCapabilityProvided( workspace_folders, 'changeNotifications' )
 
 
 def _IsCapabilityProvided( capabilities, query ):

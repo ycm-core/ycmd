@@ -74,6 +74,12 @@ TSET_JAVA = PathToTestFile( 'simple_eclipse_project',
                             'testing',
                             'Tset.java' )
 
+HIERARCHIES_JAVA = PathToTestFile( 'simple_eclipse_project',
+                                   'src',
+                                   'com',
+                                   'test',
+                                   'Hierarchies.java' )
+
 
 def RunTest( app, test, contents = None ):
   if not contents:
@@ -96,7 +102,7 @@ def RunTest( app, test, contents = None ):
   while True:
     try:
       response = app.post_json(
-        '/run_completer_command',
+        test.get( 'route', '/run_completer_command' ),
         CombineRequest( test[ 'request' ], {
           'completer_target': 'filetype_default',
           'contents': contents,
@@ -107,11 +113,12 @@ def RunTest( app, test, contents = None ):
         expect_errors = True
       )
 
-      assert_that( response.status_code,
-                   equal_to( test[ 'expect' ][ 'response' ] ) )
+      if 'expect' in test:
+        assert_that( response.status_code,
+                     equal_to( test[ 'expect' ][ 'response' ] ) )
 
-      assert_that( response.json, test[ 'expect' ][ 'data' ] )
-      break
+        assert_that( response.json, test[ 'expect' ][ 'data' ] )
+      return response.json
     except AssertionError:
       if time.time() > expiry:
         print( 'completer response: '
@@ -122,20 +129,62 @@ def RunTest( app, test, contents = None ):
       time.sleep( 0.25 )
 
 
-def RunFixItTest( app, description, filepath, line, col, fixits_for_line ):
-  RunTest( app, {
+def RunHierarchyTest( app, kind, direction, location, expected, code ):
+  file, line, column = location
+  request = {
+    'completer_target' : 'filetype_default',
+    'command': f'{ kind.title() }Hierarchy',
+    'line_num'         : line,
+    'column_num'       : column,
+    'filepath'         : file,
+  }
+  test = { 'request': request,
+           'route': '/run_completer_command' }
+  prepare_hierarchy_response = RunTest( app, test )
+  request.update( {
+    'command': f'Resolve{ kind.title() }HierarchyItem',
+    'arguments': [
+      prepare_hierarchy_response[ 0 ],
+      direction
+    ]
+  } )
+  test[ 'expect' ] = {
+    'response': code,
+    'data': expected
+  }
+  RunTest( app, test )
+
+
+def RunFixItTest( app,
+                  description,
+                  filepath,
+                  line,
+                  col,
+                  fixits_for_line,
+                  extra_request_data = None ):
+  test = {
     'description': description,
     'request': {
       'command': 'FixIt',
+      'filepath': filepath,
       'line_num': line,
       'column_num': col,
-      'filepath': filepath,
     },
-    'expect': {
-      'response': requests.codes.ok,
-      'data': fixits_for_line,
-    }
-  } )
+  }
+
+  if extra_request_data is not None:
+    test[ 'request' ].update( extra_request_data )
+
+  unresolved_fixits = RunTest( app, test )
+  resolved_fixits = { 'fixits': [] }
+  for unresolved_fixit in unresolved_fixits[ 'fixits' ]:
+    test[ 'request' ][ 'fixit' ] = unresolved_fixit
+    test[ 'route' ] = '/resolve_fixit'
+    result = RunTest( app, test )
+    if result[ 'fixits' ]:
+      resolved_fixits[ 'fixits' ].append( result[ 'fixits' ][ 0 ] )
+  print( 'completer response: ', json.dumps( resolved_fixits ) )
+  assert_that( resolved_fixits, fixits_for_line )
 
 
 @WithRetry()
@@ -178,9 +227,12 @@ class SubcommandsTest( TestCase ):
                    'GoToReferences',
                    'GoToType',
                    'GoToSymbol',
-                   'OpenProject',
                    'OrganizeImports',
                    'RefactorRename',
+                   'CallHierarchy',
+                   'TypeHierarchy',
+                   'ResolveCallHierarchyItem',
+                   'ResolveTypeHierarchyItem',
                    'RestartServer',
                    'WipeWorkspace' ) )
 
@@ -537,6 +589,37 @@ class SubcommandsTest( TestCase ):
                  ErrorMatcher( RuntimeError, 'Unknown type' ) )
 
 
+  @SharedYcmd
+  def test_Subcommands_GoToDeclaration_NoLocation( self, app ):
+    filepath = PathToTestFile( 'simple_eclipse_project',
+                               'src',
+                               'com',
+                               'test',
+                               'TestLauncher.java' )
+    contents = ReadFile( filepath )
+
+    # Virtual call of getWidgetInfo - don't know the concrete implementation.
+    # Here GoToDefinition jumps to the interface method declaration and
+    # GoToDeclaration does nothing...
+    event_data = BuildRequest( filepath = filepath,
+                               filetype = 'java',
+                               line_num = 34,
+                               column_num = 59,
+                               contents = contents,
+                               command_arguments = [ 'GoToDeclaration' ],
+                               completer_target = 'filetype_default' )
+
+    response = app.post_json( '/run_completer_command',
+                              event_data,
+                              expect_errors = True )
+
+    assert_that( response.status_code,
+                 equal_to( requests.codes.internal_server_error ) )
+
+    assert_that( response.json,
+                 ErrorMatcher( RuntimeError, 'Cannot jump to location' ) )
+
+
   @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoTo_NoLocation( self, app ):
@@ -601,46 +684,87 @@ class SubcommandsTest( TestCase ):
     'extra_conf_globlist': PathToTestFile( 'multiple_projects', '*' )
   } )
   def test_Subcommands_GoToReferences_MultipleProjects( self, app ):
-    filepath = PathToTestFile( 'multiple_projects',
-                               'src',
-                               'core',
-                               'java',
-                               'com',
-                               'puremourning',
-                               'widget',
-                               'core',
-                               'Utils.java' )
-    StartJavaCompleterServerWithFile( app, filepath )
-
-
-    RunTest( app, {
-      'description': 'GoToReferences works across multiple projects',
-      'request': {
-        'command': 'GoToReferences',
-        'filepath': filepath,
-        'line_num': 5,
-        'column_num': 22,
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': contains_inanyorder(
-          LocationMatcher( filepath, 8, 35 ),
-          LocationMatcher( filepath, 5, 21 ),
-          LocationMatcher( PathToTestFile( 'multiple_projects',
+    utils_java = PathToTestFile( 'multiple_projects',
+                                 'src',
+                                 'core',
+                                 'java',
+                                 'com',
+                                 'puremourning',
+                                 'widget',
+                                 'core',
+                                 'Utils.java' )
+    input_app = PathToTestFile( 'multiple_projects',
+                                'src',
+                                'input',
+                                'java',
+                                'com',
+                                'puremourning',
+                                'widget',
+                                'input',
+                                'InputApp.java' )
+    abstract_test_widget = PathToTestFile( 'simple_eclipse_project',
                                            'src',
-                                           'input',
-                                           'java',
                                            'com',
-                                           'puremourning',
-                                           'widget',
-                                           'input',
-                                           'InputApp.java' ),
-                           8,
-                           16 )
-        )
-      }
-    } )
+                                           'test',
+                                           'AbstractTestWidget.java' )
+    test_factory = PathToTestFile( 'simple_eclipse_project',
+                                   'src',
+                                   'com',
+                                   'test',
+                                   'TestFactory.java' )
+    test_launcher = PathToTestFile( 'simple_eclipse_project',
+                                    'src',
+                                    'com',
+                                    'test',
+                                    'TestLauncher.java' )
+    test_widget_impl = PathToTestFile( 'simple_eclipse_project',
+                                       'src',
+                                       'com',
+                                       'test',
+                                       'TestWidgetImpl.java' )
+    for desc, request, expect in [
+        ( 'GoToReferences works across multiple projects',
+          {
+            'command': 'GoToReferences',
+            'filepath': utils_java,
+            'line_num': 5,
+            'column_num': 22,
+          },
+          {
+            'response': requests.codes.ok,
+            'data': contains_inanyorder(
+              LocationMatcher( utils_java, 8, 35 ),
+              LocationMatcher( utils_java, 5, 21 ),
+              LocationMatcher( input_app, 8, 16 )
+            )
+          } ),
+        ( 'GoToReferences works in an unrelated project at the same time',
+          {
+            'command': 'GoToReferences',
+            'filepath': abstract_test_widget,
+            'line_num': 10,
+            'column_num': 15,
+          },
+          {
+            'response': requests.codes.ok,
+            'data': contains_inanyorder(
+              LocationMatcher( abstract_test_widget, 10, 15 ),
+              LocationMatcher( test_factory, 28, 9 ),
+              LocationMatcher( test_launcher, 32, 11 ),
+              LocationMatcher( test_widget_impl, 18, 15 ),
+            )
+          } ),
+    ]:
+      with self.subTest( desc = desc, request = request, expect = expect ):
+        filepath = request[ 'filepath' ]
+        StartJavaCompleterServerWithFile( app, filepath )
 
+
+        RunTest( app, {
+          'description': desc,
+          'request': request,
+          'expect': expect
+        } )
 
 
   @WithRetry()
@@ -1020,9 +1144,11 @@ class SubcommandsTest( TestCase ):
               'text': "Create constant 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( '\n\nprivate static final String Wibble = null;',
+                ChunkMatcher( '\n\nprivate static final String Wibble = null;'
+                              '\n\n  private void Wimble( Wibble w ) {'
+                              '\n    if ( w == Wibble',
                               LocationMatcher( filepath, 16, 4 ),
-                              LocationMatcher( filepath, 16, 4 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
@@ -1056,27 +1182,29 @@ class SubcommandsTest( TestCase ):
               'text': "Create local variable 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( 'Object Wibble;\n    ',
+                ChunkMatcher( 'Object Wibble;\n    if ( w == Wibble',
                               LocationMatcher( filepath, 19, 5 ),
-                              LocationMatcher( filepath, 19, 5 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
               'text': "Create field 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( '\n\nprivate Object Wibble;',
+                ChunkMatcher( '\n\nprivate Object Wibble;'
+                              '\n\n  private void Wimble( Wibble w ) {'
+                              '\n    if ( w == Wibble',
                               LocationMatcher( filepath, 16, 4 ),
-                              LocationMatcher( filepath, 16, 4 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
               'text': "Create parameter 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( ', Object Wibble',
+                ChunkMatcher( ', Object Wibble ) {\n    if ( w == Wibble',
                               LocationMatcher( filepath, 18, 32 ),
-                              LocationMatcher( filepath, 18, 32 ) ),
+                              LocationMatcher( filepath, 19, 21 ) ),
               ),
             } ),
             has_entries( {
@@ -1113,7 +1241,7 @@ class SubcommandsTest( TestCase ):
             } ),
             has_entries( {
               'kind': 'quickassist',
-              'text': "Add Javadoc for 'Wimble'"
+              'text': "Add Javadoc comment"
             } ),
             has_entries( {
               'text': "Sort Members for 'TestFactory.java'"
@@ -1184,7 +1312,7 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': "Add Javadoc for 'getWidget'"
+          'text': "Add Javadoc comment"
         } ),
         has_entries( {
           'text': "Sort Members for 'TestFactory.java'"
@@ -1257,7 +1385,7 @@ class SubcommandsTest( TestCase ):
         } ),
         has_entries( {
           'kind': 'quickassist',
-          'text': "Add Javadoc for 'testString'",
+          'text': "Add Javadoc comment",
           'chunks': instance_of( list )
         } ),
         has_entries( {
@@ -1265,6 +1393,9 @@ class SubcommandsTest( TestCase ):
         } ),
         has_entries( {
           'text': "Add all missing imports"
+        } ),
+        has_entries( {
+          'text': "Add @SuppressWarnings 'unused' to 'testString'"
         } ),
       )
     } )
@@ -1345,7 +1476,7 @@ class SubcommandsTest( TestCase ):
             'chunks': instance_of( list ),
           } ),
           has_entries( {
-            'text': "Add Javadoc for 'getWidget'",
+            'text': "Add Javadoc comment",
             'chunks': instance_of( list ),
           } ),
           has_entries( {
@@ -1376,12 +1507,111 @@ class SubcommandsTest( TestCase ):
                                'com',
                                'test',
                                'TestLauncher.java' )
-    RunTest( app, {
-      'description': 'Formatting is applied on some part of the file '
-                     'with tabs composed of 4 spaces',
-      'request': {
-        'command': 'FixIt',
-        'filepath': filepath,
+    fixits_for_range = has_entries( {
+      'fixits': contains_inanyorder(
+        has_entries( {
+          'text': 'Extract to field',
+          'kind': 'refactor.extract.field',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              matches_regexp(
+                'private String \\w+;\n'
+                '\n'
+                '    @Override\n'
+                '      public void launch\\(\\) {\n'
+                '        AbstractTestWidget w = '
+                'factory.getWidget\\( "Test" \\);\n'
+                '        '
+                'w.doSomethingVaguelyUseful\\(\\);\n'
+                '\n'
+                '        \\w+ = "Did something '
+                'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                '        System.out.println\\( \\w+' ),
+              LocationMatcher( filepath, 29, 7 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Extract to method',
+          'kind': 'refactor.extract.function',
+          'chunks': contains_exactly(
+            # This one is a wall of text that rewrites 35 lines
+            ChunkMatcher( instance_of( str ),
+                          LocationMatcher( filepath, 1, 1 ),
+                          LocationMatcher( filepath, 35, 8 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Extract to local variable (replace all occurrences)',
+          'kind': 'refactor.extract.variable',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              matches_regexp(
+                'String \\w+ = "Did something '
+                'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                '        System.out.println\\( \\w+' ),
+              LocationMatcher( filepath, 34, 9 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Extract to local variable',
+          'kind': 'refactor.extract.variable',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              matches_regexp(
+                'String \\w+ = "Did something '
+                'useful: " \\+ w.getWidgetInfo\\(\\);\n'
+                '        System.out.println\\( \\w+' ),
+              LocationMatcher( filepath, 34, 9 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Introduce Parameter...',
+          'kind': 'refactor.introduce.parameter',
+          'chunks': contains_exactly(
+            ChunkMatcher(
+              'String string) {\n'
+              '        AbstractTestWidget w = '
+              'factory.getWidget( "Test" );\n'
+              '        w.doSomethingVaguelyUseful();\n'
+              '\n'
+              '        System.out.println( string',
+              LocationMatcher( filepath, 30, 26 ),
+              LocationMatcher( filepath, 34, 73 ) ),
+          ),
+        } ),
+        has_entries( {
+          'text': 'Organize imports',
+          'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': 'Change modifiers to final where possible',
+          'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': "Add Javadoc comment",
+          'chunks': instance_of( list ),
+        } ),
+        has_entries( {
+          'text': "Sort Members for 'TestLauncher.java'"
+        } ),
+        has_entries( {
+          'text': 'Surround with try/catch',
+          'chunks': instance_of( list )
+        } ),
+      )
+    } )
+    RunFixItTest(
+      app,
+      'Formatting is applied on some part of the '
+        'file with tabs composed of 4 spaces',
+      filepath,
+      1,
+      1,
+      fixits_for_range,
+      extra_request_data = {
         'range': {
           'start': {
             'line_num': 34,
@@ -1391,105 +1621,9 @@ class SubcommandsTest( TestCase ):
             'line_num': 34,
             'column_num': 73
           }
-        },
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( {
-          'fixits': contains_inanyorder(
-            has_entries( {
-              'text': 'Extract to field',
-              'kind': 'refactor.extract.field',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  matches_regexp(
-                    'private String \\w+;\n'
-                    '\n'
-                    '    @Override\n'
-                    '      public void launch\\(\\) {\n'
-                    '        AbstractTestWidget w = '
-                    'factory.getWidget\\( "Test" \\);\n'
-                    '        '
-                    'w.doSomethingVaguelyUseful\\(\\);\n'
-                    '\n'
-                    '        \\w+ = "Did something '
-                    'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                    '        System.out.println\\( \\w+' ),
-                  LocationMatcher( filepath, 29, 7 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Extract to method',
-              'kind': 'refactor.extract.function',
-              'chunks': contains_exactly(
-                # This one is a wall of text that rewrites 35 lines
-                ChunkMatcher( instance_of( str ),
-                              LocationMatcher( filepath, 1, 1 ),
-                              LocationMatcher( filepath, 35, 8 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Extract to local variable (replace all occurrences)',
-              'kind': 'refactor.extract.variable',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  matches_regexp(
-                    'String \\w+ = "Did something '
-                    'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                    '        System.out.println\\( \\w+' ),
-                  LocationMatcher( filepath, 34, 9 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Extract to local variable',
-              'kind': 'refactor.extract.variable',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  matches_regexp(
-                    'String \\w+ = "Did something '
-                    'useful: " \\+ w.getWidgetInfo\\(\\);\n'
-                    '        System.out.println\\( \\w+' ),
-                  LocationMatcher( filepath, 34, 9 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Introduce Parameter...',
-              'kind': 'refactor.introduce.parameter',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  'String string) {\n'
-                  '        AbstractTestWidget w = '
-                  'factory.getWidget( "Test" );\n'
-                  '        w.doSomethingVaguelyUseful();\n'
-                  '\n'
-                  '        System.out.println( string',
-                  LocationMatcher( filepath, 30, 26 ),
-                  LocationMatcher( filepath, 34, 73 ) ),
-              ),
-            } ),
-            has_entries( {
-              'text': 'Organize imports',
-              'chunks': instance_of( list ),
-            } ),
-            has_entries( {
-              'text': 'Change modifiers to final where possible',
-              'chunks': instance_of( list ),
-            } ),
-            has_entries( {
-              'text': "Add Javadoc for 'launch'",
-              'chunks': instance_of( list ),
-            } ),
-            has_entries( {
-              'text': "Sort Members for 'TestLauncher.java'"
-            } ),
-          )
-        } )
+        }
       }
-    } )
-
+    )
 
 
   @WithRetry()
@@ -1545,8 +1679,17 @@ class SubcommandsTest( TestCase ):
           'text': "Create method 'doUnicødeTes(String)'",
           'kind': 'quickfix',
           'chunks': contains_exactly(
-            ChunkMatcher( 'private void doUnicødeTes(String test2) {\n}\n\n\n',
-                          LocationMatcher( TEST_JAVA, 20, 3 ),
+            ChunkMatcher(
+              'doUnicødeTes( test );\n\n'
+              '    TéstClass tésting_with_unicøde = new TéstClass();\n'
+              '    return tésting_with_unicøde.a_test;\n'
+              '  }\n\n\n'
+              '  private void doUnicødeTes(String test2) {\n'
+              '    // TODO Auto-generated method stub\n'
+              '    throw new UnsupportedOperationException('
+              '"Unimplemented method \'doUnicødeTes\'");\n'
+              '}\n\n\n',
+                          LocationMatcher( TEST_JAVA, 13, 10 ),
                           LocationMatcher( TEST_JAVA, 20, 3 ) ),
           ),
         } ),
@@ -1565,7 +1708,7 @@ class SubcommandsTest( TestCase ):
           'chunks': instance_of( list ),
         } ),
         has_entries( {
-          'text': "Add Javadoc for 'DoWhatever'"
+          'text': "Add Javadoc comment"
         } ),
         has_entries( {
           'text': "Sort Members for 'Test.java'",
@@ -1632,7 +1775,7 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': "Add Javadoc for 'getWidget'"
+          'text': "Add Javadoc comment"
         } ),
         has_entries( {
           'text': "Sort Members for 'TestFactory.java'"
@@ -1659,19 +1802,13 @@ class SubcommandsTest( TestCase ):
     with patch(
       'ycmd.completers.language_server.language_server_protocol.UriToFilePath',
       side_effect = lsp.InvalidUriException ):
-      RunTest( app, {
-        'description': 'Invalid URIs do not make us crash',
-        'request': {
-          'command': 'FixIt',
-          'line_num': 27,
-          'column_num': 12,
-          'filepath': filepath,
-        },
-        'expect': {
-          'response': requests.codes.ok,
-          'data': fixits,
-        }
-      } )
+      RunFixItTest(
+        app,
+        'Invalid URIs do not make us crash',
+        filepath,
+        27,
+        12,
+        fixits )
 
 
   @WithRetry()
@@ -2012,7 +2149,7 @@ class SubcommandsTest( TestCase ):
                         'filepath': TEST_JAVA },
           'description': 'GoTo works for unicode identifiers' }
       ],
-      [ 'GoTo', 'GoToDefinition', 'GoToDeclaration' ] ):
+      [ 'GoTo', 'GoToDefinition' ] ):
       with self.subTest( command = command, test = test ):
         RunGoToTest( app,
                      test[ 'description' ],
@@ -2021,6 +2158,31 @@ class SubcommandsTest( TestCase ):
                      test[ 'request' ][ 'col' ],
                      command,
                      has_entries( test[ 'response' ] ) )
+
+
+  @SharedYcmd
+  def test_Subcommands_GoToDeclaration( self, app ):
+    source = PathToTestFile( 'simple_eclipse_project',
+                             'src',
+                             'com',
+                             'test',
+                             'TestWidgetImpl.java' )
+    destination = PathToTestFile( 'simple_eclipse_project',
+                                  'src',
+                                  'com',
+                                  'test',
+                                  'AbstractTestWidget.java' )
+    # Seems to be the only place GoToDeclaration actually works.
+    RunGoToTest( app,
+                 'GoToDeclaration works on an override definition.',
+                 source,
+                 23,
+                 17,
+                 'GoToDeclaration',
+                 has_entries( {
+                   'line_num': 17,
+                   'column_num': 17,
+                   'filepath': destination } ) )
 
 
   @SharedYcmd
@@ -2227,7 +2389,7 @@ class SubcommandsTest( TestCase ):
 
 
   @WithRetry()
-  @SharedYcmd
+  @IsolatedYcmd()
   def test_Subcommands_IndexOutOfRange( self, app ):
     RunTest( app, {
       'description': 'Request with invalid position does not crash',
@@ -2305,10 +2467,10 @@ class SubcommandsTest( TestCase ):
             'fixits': has_items(
               has_entries( {
                 'text': 'Generate Getters and Setters',
-                'chunks': instance_of( list ) } ),
+                'resolve': True } ),
               has_entries( {
                 'text': 'Change modifiers to final where possible',
-                'chunks': instance_of( list ) } )
+                'resolve': True } )
             )
           }
         ),
@@ -2512,3 +2674,120 @@ class SubcommandsTest( TestCase ):
         'data': ''
       }
     } )
+
+
+  @SharedYcmd
+  def test_Subcommands_OutgoingCallHierarchy( self, app ):
+    filepath = HIERARCHIES_JAVA
+    for location, response, code in [
+      [ ( filepath, 15, 14 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 16, 13 ) ),
+            'kind': 'Method',
+            'name': 'g() : int'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 17, 16 ) ),
+            'kind': 'Method',
+            'name': 'f() : int'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 11, 14 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'kind': 'Method',
+            'name': 'f() : int'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'kind': 'Method',
+            'name': 'f() : int'
+          } ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 7, 14 ),
+        ErrorMatcher( RuntimeError, 'No outgoing calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'outgoing', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_IncomingCallHierarchy( self, app ):
+    filepath = HIERARCHIES_JAVA
+    for location, response, code in [
+      [ ( filepath, 7, 14 ),
+        contains_inanyorder(
+          # Once again JDT repeats items...
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'root_location': LocationMatcher( filepath, 11, 3 ),
+            'name': 'g() : int',
+            'kind': 'Method'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 12, 12 ),
+                           LocationMatcher( filepath, 12, 18 ) ),
+            'root_location': LocationMatcher( filepath, 11, 3 ),
+            'name': 'g() : int',
+            'kind': 'Method'
+          } ),
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 17, 16 ) ),
+            'root_location': LocationMatcher( filepath, 15, 3 ),
+            'name': 'h() : int',
+            'kind': 'Method'
+          } ),
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 11, 14 ),
+        contains_inanyorder(
+          has_entries( {
+            'locations': contains_exactly(
+                           LocationMatcher( filepath, 16, 13 ) ),
+            'root_location': LocationMatcher( filepath, 15, 3 ),
+            'name': 'h() : int',
+            'kind': 'Method'
+          } )
+        ),
+        requests.codes.ok ],
+      [ ( filepath, 15, 14 ),
+        ErrorMatcher( RuntimeError, 'No incoming calls found.' ),
+        requests.codes.server_error ]
+    ]:
+      with self.subTest( location = location, response = response ):
+        RunHierarchyTest( app, 'call', 'incoming', location, response, code )
+
+
+  @SharedYcmd
+  def test_Subcommands_NoHierarchyFound( self, app ):
+    filepath = HIERARCHIES_JAVA
+    request = {
+      'completer_target' : 'filetype_default',
+      'command': 'CallHierarchy',
+      'line_num'         : 2,
+      'column_num'       : 1,
+      'filepath'         : filepath,
+      'filetype'         : 'go'
+    }
+    test = { 'request': request,
+             'route': '/run_completer_command',
+             'expect': {
+               'response': requests.codes.server_error,
+               'data': ErrorMatcher(
+                   RuntimeError, 'No call hierarchy found.' ) } }
+    RunTest( app, test )

@@ -31,7 +31,7 @@ bool CodePointCompare( const CodePoint *left, const CodePoint *right ) {
 
 
 // Sort the code points according to the Canonical Ordering Algorithm.
-// See https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G49591
+// See https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49591
 CodePointSequence CanonicalSort( CodePointSequence code_points ) {
   auto code_point_start = code_points.begin();
   auto code_point_end = code_points.end();
@@ -64,7 +64,7 @@ CodePointSequence CanonicalSort( CodePointSequence code_points ) {
 
 // Decompose a UTF-8 encoded string into a sequence of code points according to
 // Canonical Decomposition. See
-// https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G733
+// https://www.unicode.org/versions/latest/core-spec/chapter-3/#G733
 CodePointSequence CanonicalDecompose( std::string_view text ) {
   assert( NormalizeInput( text ) == text );
   return CanonicalSort( BreakIntoCodePoints( text ) );
@@ -78,7 +78,7 @@ Character::Character( std::string_view character )
     is_punctuation_( false ),
     is_uppercase_( false ) {
   // Normalize the character through NFD (Normalization Form D). See
-  // https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf#G49621
+  // https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49621
   CodePointSequence code_points = CanonicalDecompose( character );
 
   for ( const auto &code_point : code_points ) {
@@ -89,10 +89,10 @@ Character::Character( std::string_view character )
     is_punctuation_ |= code_point->IsPunctuation();
     is_uppercase_ |= code_point->IsUppercase();
 
-    switch ( code_point->GetBreakProperty() ) {
-      case BreakProperty::PREPEND:
-      case BreakProperty::EXTEND:
-      case BreakProperty::SPACINGMARK:
+    switch ( code_point->GetGraphemeBreakProperty() ) {
+      case GraphemeBreakProperty::PREPEND:
+      case GraphemeBreakProperty::EXTEND:
+      case GraphemeBreakProperty::SPACINGMARK:
         is_base_ = false;
         break;
       default:

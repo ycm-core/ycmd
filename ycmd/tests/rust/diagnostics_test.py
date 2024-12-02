@@ -38,19 +38,68 @@ from ycmd.utils import ReadFile
 
 
 MAIN_FILEPATH = PathToTestFile( 'common', 'src', 'main.rs' )
+TEST_FILEPATH = PathToTestFile( 'common', 'src', 'test.rs' )
 DIAG_MATCHERS_PER_FILE = {
   MAIN_FILEPATH: contains_inanyorder(
     has_entries( {
       'kind': 'ERROR',
       'text':
           'no field `build_` on type `test::Builder`\nunknown field [E0609]',
-      'location': LocationMatcher( MAIN_FILEPATH, 14, 13 ),
-      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 14, 13 ), ( 14, 19 ) ),
+      'location': LocationMatcher( MAIN_FILEPATH, 15, 13 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 15, 13 ), ( 15, 19 ) ),
       'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
-                                        ( 14, 13 ),
-                                        ( 14, 19 ) ) ),
+                                        ( 15, 13 ),
+                                        ( 15, 19 ) ) ),
       'fixit_available': False
-    } )
+    } ),
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'unused variable: `a`\n`#[warn(unused_variables)]` '
+              'on by default [unused_variables]',
+      'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 21, 9 ), ( 21, 10 ) ),
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
+                                        ( 21, 9 ),
+                                        ( 21, 10 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'HINT',
+      'text': 'if this is intentional, '
+              'prefix it with an underscore: `_a` [unused_variables]',
+      'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 21, 9 ), ( 21, 10 ) ),
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
+                                        ( 21, 9 ),
+                                        ( 21, 10 ) ) ),
+      'fixit_available': False
+    } ),
+  ),
+  TEST_FILEPATH: contains_inanyorder(
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'function cannot return without recursing\n'
+              'a `loop` may express intention better if this is '
+              'on purpose\n'
+              '`#[warn(unconditional_recursion)]` on by default '
+              '[unconditional_recursion]',
+      'location': LocationMatcher( TEST_FILEPATH, 11, 1 ),
+      'location_extent': RangeMatcher( TEST_FILEPATH, ( 11, 1 ), ( 11, 14 ) ),
+      'ranges': contains_exactly( RangeMatcher( TEST_FILEPATH,
+                                        ( 11, 1 ),
+                                        ( 11, 14 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'HINT',
+      'text': 'recursive call site [unconditional_recursion]',
+      'location': LocationMatcher( TEST_FILEPATH, 14, 5 ),
+      'location_extent': RangeMatcher( TEST_FILEPATH, ( 14, 5 ), ( 14, 15 ) ),
+      'ranges': contains_exactly( RangeMatcher( TEST_FILEPATH,
+                                        ( 14, 5 ),
+                                        ( 14, 15 ) ) ),
+      'fixit_available': False
+    } ),
   )
 }
 
@@ -73,13 +122,13 @@ class DiagnosticsTest( TestCase ):
     request_data = BuildRequest( contents = contents,
                                  filepath = filepath,
                                  filetype = 'rust',
-                                 line_num = 14,
+                                 line_num = 15,
                                  column_num = 13 )
 
     results = app.post_json( '/detailed_diagnostic', request_data ).json
     assert_that( results, has_entry(
         'message',
-        'no field `build_` on type `test::Builder`\nunknown field' ) )
+        'no field `build_` on type `test::Builder`\nunknown field [E0609]' ) )
 
 
   @WithRetry()
@@ -102,6 +151,7 @@ class DiagnosticsTest( TestCase ):
     assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
 
 
+  @WithRetry()
   @SharedYcmd
   def test_Diagnostics_Poll( self, app ):
     project_dir = PathToTestFile( 'common' )

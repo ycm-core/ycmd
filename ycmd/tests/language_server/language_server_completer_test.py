@@ -23,6 +23,7 @@ from hamcrest import ( all_of,
                        empty,
                        ends_with,
                        equal_to,
+                       instance_of,
                        contains_exactly,
                        has_entries,
                        has_entry,
@@ -103,6 +104,71 @@ def _Check_Distance( point, start, end, expected ):
 
 
 class LanguageServerCompleterTest( TestCase ):
+  @IsolatedYcmd()
+  def test_LanguageServerCompleter_DocumentSymbol_Hierarchical( self, app ):
+    completer = MockCompleter()
+    completer._server_capabilities = { 'documentSymbolProvider': True }
+    request_data = RequestWrap( BuildRequest( filepath = '/foo' ) )
+    server_response = {
+      'result': [
+        {
+          "name": "testy",
+          "kind": 3,
+          "range": {
+            "start": { "line": 2, "character": 0 },
+            "end": { "line": 12, "character": 1 }
+          },
+          "children": [
+            {
+              "name": "MainClass",
+              "kind": 5,
+              "range": {
+                "start": { "line": 4, "character": 1 },
+                "end": { "line": 11, "character": 2 }
+              }
+            }
+          ]
+        },
+        {
+          "name": "other",
+          "kind": 3,
+          "range": {
+            "start": { "line": 14, "character": 0 },
+            "end": { "line": 15, "character": 1 }
+          },
+          "children": []
+        }
+      ]
+    }
+
+    with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+      with patch.object( completer.GetConnection(),
+                         'GetResponse',
+                         return_value = server_response ):
+        document_outline = completer.GoToDocumentOutline( request_data )
+        print( f'result: { document_outline }' )
+        assert_that( document_outline, contains_exactly(
+          has_entries( {
+            'line_num': 15,
+            'column_num': 1,
+            'filepath': instance_of( str ),
+            'description': 'Namespace: other',
+          } ),
+          has_entries( {
+            'line_num': 3,
+            'column_num': 1,
+            'filepath': instance_of( str ),
+            'description': 'Namespace: testy',
+          } ),
+          has_entries( {
+            'line_num': 5,
+            'column_num': 2,
+            'filepath': instance_of( str ),
+            'description': 'Class: MainClass',
+          } )
+        ) )
+
+
   @IsolatedYcmd( { 'global_ycm_extra_conf':
                    PathToTestFile( 'extra_confs', 'settings_extra_conf.py' ) } )
   def test_LanguageServerCompleter_ExtraConf_ServerReset( self, app ):
@@ -1497,7 +1563,8 @@ class LanguageServerCompleterTest( TestCase ):
     # Point inside range.
     _Check_Distance( ( 0, 4 ), ( 0, 2 ), ( 0, 5 ) , 0 )
     # Point to the right of range.
-    _Check_Distance( ( 0, 8 ), ( 0, 2 ), ( 0, 5 ) , 3 )
+    # +1 because diags are half-open ranges.
+    _Check_Distance( ( 0, 8 ), ( 0, 2 ), ( 0, 5 ) , 4 )
 
 
   def test_LanguageServerCompleter_DistanceOfPointToRange_MultiLineRange(
@@ -1507,4 +1574,5 @@ class LanguageServerCompleterTest( TestCase ):
     # Point inside range.
     _Check_Distance( ( 1, 4 ), ( 0, 2 ), ( 3, 5 ) , 0 )
     # Point to the right of range.
-    _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 3 )
+    # +1 because diags are half-open ranges.
+    _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 4 )

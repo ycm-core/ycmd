@@ -17,14 +17,10 @@ DIR_OF_WATCHDOG_DEPS = p.join( DIR_OF_THIRD_PARTY, 'watchdog_deps' )
 LIBCLANG_DIR = p.join( DIR_OF_THIRD_PARTY, 'clang', 'lib' )
 
 python_path = [
-  p.join( DIR_OF_THIRD_PARTY, 'bottle' ),
   p.join( DIR_OF_THIRD_PARTY, 'regex-build' ),
-  p.join( DIR_OF_THIRD_PARTY, 'frozendict' ),
   p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'jedi' ),
   p.join( DIR_OF_THIRD_PARTY, 'jedi_deps', 'parso' ),
   p.join( DIR_OF_WATCHDOG_DEPS, 'watchdog', 'build', 'lib3' ),
-  p.join( DIR_OF_WATCHDOG_DEPS, 'pathtools' ),
-  p.join( DIR_OF_THIRD_PARTY, 'waitress' ),
 ]
 if os.environ.get( 'PYTHONPATH' ) is not None:
   python_path.append( os.environ[ 'PYTHONPATH' ] )
@@ -233,7 +229,6 @@ def UnittestValgrind( parsed_args, extra_unittest_args ):
     # unittest_args += [ '-m', 'not valgrind_skip' ]
 
   new_env = os.environ.copy()
-  new_env[ 'PYTHONMALLOC' ] = 'malloc'
   new_env[ 'LD_LIBRARY_PATH' ] = LIBCLANG_DIR
   new_env[ 'YCM_VALGRIND_RUN' ] = '1'
   cmd = [ 'valgrind',

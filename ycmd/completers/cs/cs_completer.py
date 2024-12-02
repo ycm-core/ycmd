@@ -241,6 +241,9 @@ class CsharpCompleter( Completer ):
          self._SolutionSubcommand( request_data,
                                    method = '_RefactorRename',
                                    args = args ) ),
+      'GoToDocumentOutline'              : ( lambda self, request_data, args:
+         self._SolutionSubcommand( request_data,
+                                   method = '_GoToDocumentOutline' ) ),
     }
 
 
@@ -313,6 +316,9 @@ class CsharpCompleter( Completer ):
     if not diagnostics:
       raise ValueError( NO_DIAGNOSTIC_MESSAGE )
 
+    # Prefer errors to warnings and warnings to infos.
+    diagnostics.sort( key = _CsDiagnosticToLspSeverity )
+
     closest_diagnostic = None
     distance_to_closest_diagnostic = 999
 
@@ -349,7 +355,7 @@ class CsharpCompleter( Completer ):
       omnisharp_server = responses.DebugInfoServer(
         name = 'OmniSharp',
         handle = completer._omnisharp_phandle,
-        executable = PATH_TO_ROSLYN_OMNISHARP,
+        executable = ' '.join( completer._ConstructOmnisharpCommand() ),
         address = 'localhost',
         port = completer._omnisharp_port,
         logfiles = [ completer._filename_stdout, completer._filename_stderr ],
@@ -398,6 +404,7 @@ class CsharpSolutionCompleter( object ):
     self._keep_logfiles = keep_logfiles
     self._filename_stderr = None
     self._filename_stdout = None
+    self._omnisharp_command = None
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     self._desired_omnisharp_port = desired_omnisharp_port
@@ -420,6 +427,24 @@ class CsharpSolutionCompleter( object ):
       return self._StartServerNoLock()
 
 
+  def _ConstructOmnisharpCommand( self ):
+    if self._omnisharp_command:
+      return self._omnisharp_command
+
+    self._ChooseOmnisharpPort()
+    self._omnisharp_command = [ self._roslyn_path,
+                                '-p',
+                                str( self._omnisharp_port ),
+                                '-s',
+                                str( self._solution_path ) ]
+
+    if ( not utils.OnWindows()
+         and self._roslyn_path.endswith( '.exe' ) ):
+      self._omnisharp_command.insert( 0, self._mono_path )
+
+    return self._omnisharp_command
+
+
   def _StartServerNoLock( self ):
     """ Start the OmniSharp server if not already running. Use a lock to avoid
     starting the server multiple times for the same solution. """
@@ -429,18 +454,7 @@ class CsharpSolutionCompleter( object ):
     LOGGER.info( 'Starting OmniSharp server' )
     LOGGER.info( 'Loading solution file %s', self._solution_path )
 
-    self._ChooseOmnisharpPort()
-
-    command = [ PATH_TO_OMNISHARP_ROSLYN_BINARY,
-                '-p',
-                str( self._omnisharp_port ),
-                '-s',
-                str( self._solution_path ) ]
-
-    if ( not utils.OnWindows()
-         and self._roslyn_path.endswith( '.exe' ) ):
-      command.insert( 0, self._mono_path )
-
+    command = self._ConstructOmnisharpCommand()
     LOGGER.info( 'Starting OmniSharp server with: %s', command )
 
     solutionfile = os.path.basename( self._solution_path )
@@ -513,6 +527,7 @@ class CsharpSolutionCompleter( object ):
 
 
   def _CleanUp( self ):
+    self._omnisharp_command = None
     self._omnisharp_port = None
     self._omnisharp_phandle = None
     if not self._keep_logfiles:
@@ -621,33 +636,45 @@ class CsharpSolutionCompleter( object ):
     if quickfixes:
       if len( quickfixes ) == 1:
         ref = quickfixes[ 0 ]
-        ref_file = ref[ 'FileName' ]
-        ref_line = ref[ 'Line' ]
-        lines = GetFileLines( request_data, ref_file )
-        line = lines[ min( len( lines ), ref_line - 1 ) ]
         return responses.BuildGoToResponseFromLocation(
           _BuildLocation(
             request_data,
-            ref_file,
-            ref_line,
+            ref[ 'FileName' ],
+            ref[ 'Line' ],
             ref[ 'Column' ] ),
-          line )
+          ref[ 'Text' ] )
       else:
         goto_locations = []
         for ref in quickfixes:
-          ref_file = ref[ 'FileName' ]
-          ref_line = ref[ 'Line' ]
-          lines = GetFileLines( request_data, ref_file )
-          line = lines[ min( len( lines ), ref_line - 1 ) ]
           goto_locations.append(
             responses.BuildGoToResponseFromLocation(
               _BuildLocation( request_data,
-                              ref_file,
-                              ref_line,
+                              ref[ 'FileName' ],
+                              ref[ 'Line' ],
                               ref[ 'Column' ] ),
-              line ) )
+              ref[ 'Text' ] ) )
 
         return goto_locations
+    else:
+      raise RuntimeError( 'No symbols found' )
+
+
+  def _GoToDocumentOutline( self, request_data ):
+    request = self._DefaultParameters( request_data )
+    response = self._GetResponse( '/currentfilemembersasflat', request )
+    if response is not None and len( response ) > 0:
+      goto_locations = []
+      for ref in response:
+        goto_locations.append(
+          responses.BuildGoToResponseFromLocation(
+            _BuildLocation( request_data,
+                            ref[ 'FileName' ],
+                            ref[ 'Line' ],
+                            ref[ 'Column' ] ),
+            ref[ 'Text' ] ) )
+      if len( goto_locations ) > 1:
+        return goto_locations
+      return goto_locations[ 0 ]
     else:
       raise RuntimeError( 'No symbols found' )
 
@@ -944,3 +971,11 @@ def _ModifiedFilesToFixIt( changes, request_data ):
         request_data[ 'line_num' ],
         request_data[ 'column_codepoint' ] ),
       chunks )
+
+
+def _CsDiagnosticToLspSeverity( diagnostic ):
+  if diagnostic.kind_ == 'ERROR':
+    return 1
+  if diagnostic.kind_ == 'WARNING':
+    return 2
+  return 3

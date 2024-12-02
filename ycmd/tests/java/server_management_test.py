@@ -18,7 +18,6 @@
 import functools
 import os
 import psutil
-import requests
 import time
 
 from unittest.mock import patch
@@ -36,14 +35,15 @@ from ycmd.tests.java import setUpModule, tearDownModule # noqa
 from ycmd.tests.java import ( PathToTestFile,
                               isolated_app,
                               IsolatedYcmd,
-                              SharedYcmd,
                               StartJavaCompleterServerInDirectory,
                               StartJavaCompleterServerWithFile )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompleterProjectDirectoryMatcher,
-                                    ErrorMatcher,
+                                    LocationMatcher,
                                     MockProcessTerminationTimingOut,
+                                    RangeMatcher,
                                     TemporaryTestDir,
+                                    WaitForDiagnosticsToBeReady,
                                     WaitUntilCompleterServerReady )
 from ycmd import utils, handlers
 
@@ -299,43 +299,43 @@ class ServerManagementTest( TestCase ):
                  CompleterProjectDirectoryMatcher( project ) )
 
 
-  @SharedYcmd
-  def test_ServerManagement_OpenProject_RelativePathNoWD( self, app ):
-    response = app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filetype = 'java',
-        command_arguments = [
-          'OpenProject',
-          os.path.join( '..', 'simple_maven_project' ),
-        ],
-      ),
-      expect_errors = True,
-    )
-    assert_that( response.status_code,
-                 equal_to( requests.codes.internal_server_error ) )
-    assert_that( response.json,
-                 ErrorMatcher( ValueError,
-                               'Project directory must be absolute' ) )
+  @TidyJDTProjectFiles( PathToTestFile( 'gradle-init' ) )
+  @IsolatedYcmd()
+  def test_ServerManagement_ProjectDetection_GradleMultipleGradleFiles( self,
+                                                                        app ):
+    testfile = PathToTestFile( 'gradle-init',
+                               'app',
+                               'src',
+                               'main',
+                               'java',
+                               'org',
+                               'example',
+                               'app',
+                               'App.java' )
+    project = PathToTestFile( 'gradle-init' )
 
+    StartJavaCompleterServerWithFile( app, testfile )
 
-  @SharedYcmd
-  def test_ServerManagement_OpenProject_RelativePathNoPath( self, app ):
-    response = app.post_json(
-      '/run_completer_command',
-      BuildRequest(
-        filetype = 'java',
-        command_arguments = [
-          'OpenProject',
-        ],
-      ),
-      expect_errors = True,
-    )
-    assert_that( response.status_code,
-                 equal_to( requests.codes.internal_server_error ) )
-    assert_that( response.json,
-                 ErrorMatcher( ValueError,
-                               'Usage: OpenProject <project directory>' ) )
+    # Run the debug info to check that we have the correct project dir
+    request_data = BuildRequest( filetype = 'java' )
+    assert_that( app.post_json( '/debug_info', request_data ).json,
+                 CompleterProjectDirectoryMatcher( project ) )
+
+    # Check that we successfully actually parse the project too
+    contents = utils.ReadFile( testfile )
+    diags = WaitForDiagnosticsToBeReady( app, testfile, contents, 'java' )
+    assert_that( diags, has_item(
+      has_entries( {
+        'kind': 'WARNING',
+        'text': 'The value of the local variable unused is not used '
+                '[536870973]',
+        'location': LocationMatcher( testfile, 16, 16 ),
+        'location_extent': RangeMatcher( testfile, ( 16, 16 ), ( 16, 22 ) ),
+        'ranges': contains_exactly(
+          RangeMatcher( testfile, ( 16, 16 ), ( 16, 22 ) ) ),
+        'fixit_available': False
+      } ),
+    ) )
 
 
   def test_ServerManagement_ProjectDetection_NoParent( self ):

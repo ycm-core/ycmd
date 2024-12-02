@@ -209,6 +209,10 @@ class GenericCompleterTest( TestCase ):
               'value': PathToTestFile( 'generic_server' ),
             } ),
             has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items(),
+            } ),
+            has_entries( {
               'key': 'Settings',
               'value': '{}'
             } ),
@@ -255,6 +259,10 @@ class GenericCompleterTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile( 'generic_server' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items(),
             } ),
             has_entries( {
               'key': 'Settings',
@@ -308,6 +316,10 @@ class GenericCompleterTest( TestCase ):
               has_entries( {
                 'key': 'Project Directory',
                 'value': None,
+              } ),
+              has_entries( {
+                'key': 'Open Workspaces',
+                'value': has_items(),
               } ),
               has_entries( {
                 'key': 'Settings',
@@ -471,6 +483,62 @@ class GenericCompleterTest( TestCase ):
   @IsolatedYcmd( { 'language_server':
     [ { 'name': 'foo',
         'filetypes': [ 'foo' ],
+        'project_root_files': [ '*root' ],
+        'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
+  def test_GenericLSPCompleter_DebugInfo_CustomRootGlob( self, app, *args ):
+    test_file = PathToTestFile(
+        'generic_server', 'foo', 'bar', 'baz', 'test_file' )
+    request = BuildRequest( filepath = test_file,
+                            filetype = 'foo',
+                            line_num = 1,
+                            column_num = 1,
+                            contents = '',
+                            event_name = 'FileReadyToParse' )
+
+    app.post_json( '/event_notification', request )
+    WaitUntilCompleterServerReady( app, 'foo' )
+    request.pop( 'event_name' )
+    response = app.post_json( '/debug_info', request ).json
+    assert_that(
+      response,
+      has_entry( 'completer', has_entries( {
+        'name': 'GenericLSP',
+        'servers': contains_exactly( has_entries( {
+          'name': 'fooCompleter',
+          'is_running': instance_of( bool ),
+          'executable': contains_exactly( instance_of( str ),
+                                  instance_of( str ),
+                                  instance_of( str ) ),
+          'address': None,
+          'port': None,
+          'pid': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ) ),
+          'extras': contains_exactly(
+            has_entries( {
+              'key': 'Server State',
+              'value': instance_of( str ),
+            } ),
+            has_entries( {
+              'key': 'Project Directory',
+              'value': PathToTestFile( 'generic_server', 'foo' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items(),
+            } ),
+            has_entries( {
+              'key': 'Settings',
+              'value': '{}'
+            } ),
+          )
+        } ) ),
+      } ) )
+    )
+
+
+  @IsolatedYcmd( { 'language_server':
+    [ { 'name': 'foo',
+        'filetypes': [ 'foo' ],
         'project_root_files': [ 'proj_root' ],
         'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ] } ] } )
   def test_GenericLSPCompleter_DebugInfo_CustomRoot( self, app, *args ):
@@ -509,6 +577,10 @@ class GenericCompleterTest( TestCase ):
             has_entries( {
               'key': 'Project Directory',
               'value': PathToTestFile( 'generic_server', 'foo' ),
+            } ),
+            has_entries( {
+              'key': 'Open Workspaces',
+              'value': has_items(),
             } ),
             has_entries( {
               'key': 'Settings',
