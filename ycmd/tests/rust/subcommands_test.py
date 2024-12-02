@@ -563,31 +563,38 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_FixIt_Basic( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
-    RunFixItTest( app, {
-      'description': 'Simple FixIt test',
-      'chosen_fixit': 2,
-      'request': {
-        'command': 'FixIt',
-        'line_num': 18,
-        'column_num': 2,
-        'filepath': filepath
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( {
-          'fixits': has_item( has_entries( {
-            'chunks': contains_exactly(
-              ChunkMatcher( 'pub(crate) ',
-                            LocationMatcher( filepath, 18, 1 ),
-                            LocationMatcher( filepath, 18, 1 ) )
-            )
-          } ) )
+    for line, column, choice, chunks in [
+      ( 18, 2, 2, [
+        ChunkMatcher( 'pub(crate) ',
+                      LocationMatcher( filepath, 18, 1 ),
+                      LocationMatcher( filepath, 18, 1 ) ) ] ),
+      ( 27, 5, 0, [
+        ChunkMatcher( 'mut ',
+                      LocationMatcher( filepath, 26, 9 ),
+                      LocationMatcher( filepath, 26, 9 ) ) ] ),
+    ]:
+      with self.subTest( line = line, column = column, choice = choice ):
+        RunFixItTest( app, {
+          'description': 'Simple FixIt test',
+          'chosen_fixit': choice,
+          'request': {
+            'command': 'FixIt',
+            'line_num': line,
+            'column_num': column,
+            'filepath': filepath
+          },
+          'expect': {
+            'response': requests.codes.ok,
+            'data': has_entries( {
+              'fixits': has_item( has_entries( {
+                'chunks': contains_exactly( *chunks )
+              } ) )
+            } )
+          },
         } )
-      },
-    } )
 
 
-  @WithRetry()
+  @WithRetry( rerun_delay = 20 )
   @IsolatedYcmd()
   def test_Subcommands_GoTo_WorksAfterChangingProject( self, app ):
     filepath = PathToTestFile( 'macro', 'src', 'main.rs' )
