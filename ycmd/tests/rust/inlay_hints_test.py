@@ -107,7 +107,7 @@ class SignatureHelpTest( TestCase ):
             has_entries( {
               'kind': 'Type',
               'position': LocationMatcher( filepath, 12, 10 ),
-              'label': ':  Builder '
+              'label': ':  Builder'
             } ),
           ),
         } )
