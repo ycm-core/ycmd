@@ -26,10 +26,9 @@ import json
 import os
 
 from ycmd.tests.rust import setUpModule, tearDownModule # noqa
-from ycmd.tests.rust import PathToTestFile, SharedYcmd
+from ycmd.tests.rust import PathToTestFile, SharedYcmd, PollForMessages
 from ycmd.tests.test_utils import ( BuildRequest,
                                     LocationMatcher,
-                                    PollForMessages,
                                     PollForMessagesTimeoutException,
                                     RangeMatcher,
                                     WaitForDiagnosticsToBeReady,
@@ -74,10 +73,42 @@ DIAG_MATCHERS_PER_FILE = {
                                         ( 21, 10 ) ) ),
       'fixit_available': False
     } ),
+    has_entries( {
+      'kind': 'ERROR',
+      'text': 'cannot assign twice to immutable variable `foo`\n'
+              'cannot assign twice to immutable variable [E0384]',
+      'location': LocationMatcher( MAIN_FILEPATH, 27, 5 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 27, 5 ), ( 27, 13 ) ),
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
+                                        ( 27, 5 ),
+                                        ( 27, 13 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'HINT',
+      'text': 'first assignment to `foo` [E0384]',
+      'location': LocationMatcher( MAIN_FILEPATH, 26, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 26, 9 ), ( 26, 12 ) ),
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
+                                        ( 26, 9 ),
+                                        ( 26, 12 ) ) ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'HINT',
+      'text': 'consider making this binding mutable: `mut ` [E0384]',
+      'location': LocationMatcher( MAIN_FILEPATH, 26, 9 ),
+      'location_extent': RangeMatcher( MAIN_FILEPATH, ( 26, 9 ), ( 26, 9 ) ),
+      'ranges': contains_exactly( RangeMatcher( MAIN_FILEPATH,
+                                        ( 26, 9 ),
+                                        ( 26, 9 ) ) ),
+      'fixit_available': False
+    } ),
   ),
   TEST_FILEPATH: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
+
       'text': 'function cannot return without recursing\n'
               'a `loop` may express intention better if this is '
               'on purpose\n'
@@ -131,27 +162,34 @@ class DiagnosticsTest( TestCase ):
         'no field `build_` on type `test::Builder`\nunknown field [E0609]' ) )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Diagnostics_FileReadyToParse( self, app ):
-    filepath = PathToTestFile( 'common', 'src', 'main.rs' )
-    contents = ReadFile( filepath )
-    with open( filepath, 'w' ) as f:
-      f.write( contents )
-    event_data = BuildRequest( event_name = 'FileSave',
-                               contents = contents,
-                               filepath = filepath,
-                               filetype = 'rust' )
-    app.post_json( '/event_notification', event_data )
+    for filename in [ 'main.rs', 'test.rs' ]:
+      with self.subTest( filename = filename ):
+        @WithRetry()
+        def Test():
+          filepath = PathToTestFile( 'common', 'src', filename )
+          contents = ReadFile( filepath )
+          with open( filepath, 'w' ) as f:
+            f.write( contents )
+          event_data = BuildRequest( event_name = 'FileSave',
+                                    contents = contents,
+                                    filepath = filepath,
+                                    filetype = 'rust' )
+          app.post_json( '/event_notification', event_data )
 
-    # It can take a while for the diagnostics to be ready.
-    results = WaitForDiagnosticsToBeReady( app, filepath, contents, 'rust' )
-    print( f'completer response: { pformat( results ) }' )
+          # It can take a while for the diagnostics to be ready.
+          results = WaitForDiagnosticsToBeReady( app,
+                                                 filepath,
+                                                 contents,
+                                                 'rust' )
+          print( f'completer response: { pformat( results ) }' )
 
-    assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
+          assert_that( results, DIAG_MATCHERS_PER_FILE[ filepath ] )
+        Test()
 
 
-  @WithRetry()
+  @WithRetry( { 'reruns': 1000 } )
   @SharedYcmd
   def test_Diagnostics_Poll( self, app ):
     project_dir = PathToTestFile( 'common' )
@@ -170,10 +208,10 @@ class DiagnosticsTest( TestCase ):
     seen = {}
 
     try:
-      for message in PollForMessages( app,
+      for message in reversed( PollForMessages( app,
                                       { 'filepath': filepath,
                                         'contents': contents,
-                                        'filetype': 'rust' } ):
+                                        'filetype': 'rust' } ) ):
         print( f'Message { pformat( message ) }' )
         if 'diagnostics' in message:
           if message[ 'diagnostics' ] == []:
