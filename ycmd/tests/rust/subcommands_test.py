@@ -138,6 +138,7 @@ def RunHierarchyTest( app, kind, direction, location, expected, code ):
   RunTest( app, test )
 
 
+@WithRetry()
 def RunGoToTest( app, command, test, *, project_root = 'common' ):
   folder = PathToTestFile( project_root, 'src' )
   filepath = os.path.join( folder, test[ 'req' ][ 0 ] )
@@ -423,7 +424,6 @@ class SubcommandsTest( TestCase ):
         RunGoToTest( app, 'GoToType', test )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoTo( self, app ):
     for test, command in itertools.product(
@@ -442,7 +442,6 @@ class SubcommandsTest( TestCase ):
         RunGoToTest( app, command, test )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoToImplementation( self, app ):
     for test in [
@@ -456,7 +455,6 @@ class SubcommandsTest( TestCase ):
         RunGoToTest( app, 'GoToImplementation', test )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoToImplementation_Failure( self, app ):
     RunGoToTest( app,
@@ -587,7 +585,6 @@ class SubcommandsTest( TestCase ):
     } )
 
 
-  @WithRetry()
   @IsolatedYcmd()
   def test_Subcommands_GoTo_WorksAfterChangingProject( self, app ):
     filepath = PathToTestFile( 'macro', 'src', 'main.rs' )
