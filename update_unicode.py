@@ -607,7 +607,7 @@ def GenerateNormalizationTestCases( output_file ):
         JoinUnicodeToUtf8( captures[ 4 ].split() ) + '"},\n' )
 
   res[ -1 ] = res[ -1 ].rstrip( ',\n' )
-  with open( output_file, 'w' ) as f:
+  with open( output_file, 'w', encoding = 'utf8' ) as f:
     f.writelines( res )
 
 
@@ -629,7 +629,7 @@ def GenerateGraphemeBreakTestCases( output_file ):
                   for x in split_data ] ).rstrip( ',' ) + '}},\n' )
 
   res[ -1 ] = res[ -1 ].rstrip( ',\n' )
-  with open( output_file, 'w' ) as f:
+  with open( output_file, 'w', encoding = 'utf8' ) as f:
     f.writelines( res )
 
 

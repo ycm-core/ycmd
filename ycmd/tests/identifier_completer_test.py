@@ -121,7 +121,7 @@ class IdentifierCompleterTest( TestCase ):
                                4 ) ) ) )
     assert_that( '', equal_to(
       ic._GetCursorIdentifier( False,
-                               BuildRequestWrap( '/*\n' ' * foobar\n' ' */',
+                               BuildRequestWrap( '/*\n * foobar\n */',
                                5,
                                2 ) ) ) )
 
@@ -133,7 +133,7 @@ class IdentifierCompleterTest( TestCase ):
                                4 ) ) ) )
     assert_that( 'foobar', equal_to(
       ic._GetCursorIdentifier( True,
-                               BuildRequestWrap( '/*\n' ' * foobar\n' ' */',
+                               BuildRequestWrap( '/*\n * foobar\n */',
                                5,
                                2 ) ) ) )
 
@@ -254,7 +254,7 @@ class IdentifierCompleterTest( TestCase ):
     assert_that( '', equal_to(
       ic._PreviousIdentifier( 2,
                               False,
-                              BuildRequestWrap( '/*\n' ' * foo\n' ' */',
+                              BuildRequestWrap( '/*\n * foo\n */',
                               column_num = 2,
                               line_num = 3 ) ) ) )
 
@@ -269,7 +269,7 @@ class IdentifierCompleterTest( TestCase ):
     assert_that( 'foo', equal_to(
       ic._PreviousIdentifier( 2,
                               True,
-                              BuildRequestWrap( '/*\n' ' * foo\n' ' */',
+                              BuildRequestWrap( '/*\n * foo\n */',
                               column_num = 2,
                               line_num = 3 ) ) ) )
 

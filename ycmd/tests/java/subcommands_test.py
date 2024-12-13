@@ -1779,7 +1779,7 @@ class SubcommandsTest( TestCase ):
 
     contents = ReadFile( filepath )
     # Wait for jdt.ls to have parsed the file and returned some diagnostics
-    for tries in range( 0, 60 ):
+    for _ in range( 0, 60 ):
       results = app.post_json( '/event_notification',
                                BuildRequest( filepath = filepath,
                                              filetype = 'java',

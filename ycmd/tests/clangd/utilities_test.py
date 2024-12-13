@@ -104,7 +104,7 @@ class UtilitiesTest( TestCase ):
                           ( 13, 0, 0 ),
                           ( 13, 10, 10 ),
                           ( 100, 100, 100 ) ] )
-  def test_ClangdCompleter_CheckClangdVersion( *args ):
+  def test_ClangdCompleter_CheckClangdVersion( self, *args ):
     assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
                   equal_to( True ) )
     assert_that( clangd_completer.CheckClangdVersion( 'clangd' ),
