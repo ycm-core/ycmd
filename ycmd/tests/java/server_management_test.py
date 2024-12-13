@@ -36,15 +36,15 @@ from ycmd.tests.java import ( PathToTestFile,
                               isolated_app,
                               IsolatedYcmd,
                               StartJavaCompleterServerInDirectory,
-                              StartJavaCompleterServerWithFile )
+                              StartJavaCompleterServerWithFile,
+                              WaitUntilJavaCompleterServerReady )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompleterProjectDirectoryMatcher,
                                     LocationMatcher,
                                     MockProcessTerminationTimingOut,
                                     RangeMatcher,
                                     TemporaryTestDir,
-                                    WaitForDiagnosticsToBeReady,
-                                    WaitUntilCompleterServerReady )
+                                    WaitForDiagnosticsToBeReady )
 from ycmd import utils, handlers
 
 
@@ -104,7 +104,7 @@ class ServerManagementTest( TestCase ):
       ),
     )
 
-    WaitUntilCompleterServerReady( app, 'java' )
+    WaitUntilJavaCompleterServerReady( app )
 
     app.post_json(
       '/event_notification',
@@ -147,7 +147,7 @@ class ServerManagementTest( TestCase ):
           ),
         )
 
-        WaitUntilCompleterServerReady( app, 'java' )
+        WaitUntilJavaCompleterServerReady( app )
 
         assert_that(
           app.post_json( '/debug_info',
@@ -197,7 +197,7 @@ class ServerManagementTest( TestCase ):
           ),
         )
 
-        WaitUntilCompleterServerReady( app, 'java' )
+        WaitUntilJavaCompleterServerReady( app )
 
         assert_that(
           app.post_json( '/debug_info',
