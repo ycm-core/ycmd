@@ -19,8 +19,9 @@ import time
 from hamcrest import ( assert_that,
                        has_item,
                        empty,
+                       equal_to,
                        has_key,
-                       is_not )
+                       has_entry )
 from pprint import pformat
 from unittest import TestCase
 
@@ -37,7 +38,7 @@ from ycmd.utils import ReadFile
 
 class GetCompletionsProcMacroTest( TestCase ):
   @WithRetry()
-  @IsolatedYcmd()
+  @IsolatedYcmd( { 'max_num_candidates_to_detail': 0 } )
   def test_GetCompletions_ProcMacro( self, app ):
     StartRustCompleterServerInDirectory( app, PathToTestFile( 'macro' ) )
 
@@ -68,17 +69,27 @@ class GetCompletionsProcMacroTest( TestCase ):
       )
     )
 
-    # This completer does not require or support resolve
-    assert_that( results[ 0 ], is_not( has_key( 'resolve' ) ) )
-    assert_that( results[ 0 ], is_not( has_key( 'item' ) ) )
+    checked_candidate = None
+    for candidate in results:
+      if candidate[ 'insertion_text' ] == 'checkpoint':
+        checked_candidate = candidate
+        break
 
-    # So (erroneously) resolving an item returns the item
-    completion_data[ 'resolve' ] = 0
+    unresolved_item = checked_candidate[ 'extra_data' ]
+    assert_that( unresolved_item, has_key( 'resolve' ) )
+    assert_that( unresolved_item, has_key( 'item' ) )
+    assert_that( checked_candidate, has_entry( 'detailed_info',
+                                               'checkpoint\n\n' ) )
+
+    completion_data[ 'resolve' ] = unresolved_item[ 'resolve' ]
     response = app.post_json( '/resolve_completion', completion_data ).json
     print( f"Resolve resolve: { pformat( response ) }" )
 
-    # We can't actually check the result because we don't know what completion
-    # resolve ID 0 actually is (could be anything), so we just check that we
-    # get 1 result, and that there are no errors.
-    assert_that( response[ 'completion' ], is_not( None ) )
     assert_that( response[ 'errors' ], empty() )
+    assert_that( response[ 'completion' ][ 'detailed_info' ],
+                 equal_to(
+                   "checkpoint\n"
+                   "\n"
+                   "Validate that all current expectations for "
+                   "all methods have\n"
+                   "been satisfied, and discard them." ) )
