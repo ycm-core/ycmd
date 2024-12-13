@@ -2997,13 +2997,22 @@ class LanguageServerCompleter( Completer ):
             REQUEST_TIMEOUT_COMMAND )[ 'result' ]
 
     result = []
-    if 'edit' in code_action:
+    edit = code_action.get( 'edit' )
+    command = code_action.get( 'command' )
+    assert edit or command
+    if edit and command:
       result.append( self.CodeActionLiteralToFixIt( request_data,
                                                     code_action ) )
+      self._code_action_continuation = command
+      result[ 0 ].keep_going = True
+      return responses.BuildFixItResponse( result )
+    if edit:
+      result.append( self.CodeActionLiteralToFixIt( request_data,
+                                                    code_action ) )
+      return responses.BuildFixItResponse( result )
 
-    if 'command' in code_action:
-      assert not result, 'Code actions with edit and command is not supported.'
-      if isinstance( code_action[ 'command' ], str ):
+    if command:
+      if isinstance( command, str ):
         unresolved_command_fixit = self.CommandToFixIt( request_data,
                                                         code_action )
       else:
@@ -3012,7 +3021,7 @@ class LanguageServerCompleter( Completer ):
       result.append( self._ResolveFixitCommand( request_data,
                                                 unresolved_command_fixit ) )
 
-    return responses.BuildFixItResponse( result )
+      return responses.BuildFixItResponse( result )
 
 
   def _ResolveFixitCommand( self, request_data, fixit ):
@@ -3046,6 +3055,14 @@ class LanguageServerCompleter( Completer ):
       # Somebody has sent us an already resolved fixit.
       return { 'fixits': [ fixit ] }
     return self._ResolveFixit( request_data, request_data[ 'fixit' ] )
+
+
+  def NextFixIt( self, request_data ):
+    lsp_command = self._code_action_continuation
+    self._code_action_continuation = None
+    unresolved_command_fixit = self.CommandToFixIt( request_data, lsp_command )
+    fixit = self._ResolveFixitCommand( request_data, unresolved_command_fixit )
+    return responses.BuildFixItResponse( [ fixit ] )
 
 
   def ExecuteCommand( self, request_data, args ):
