@@ -543,6 +543,7 @@ def FixIt_Check_AutoExpand_Resolved( results ):
   } ) )
 
 
+@WithRetry()
 def RunRangedFixItTest( app, rng, expected, chosen_fixit = 0 ):
   contents = ReadFile( PathToTestFile( 'FixIt_Clang_cpp11.cpp' ) )
   args = {
@@ -616,7 +617,6 @@ class SubcommandsTest( TestCase ):
     } )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_ServerNotInitialized( self, app ):
     for cmd in [
@@ -646,6 +646,7 @@ class SubcommandsTest( TestCase ):
       with self.subTest( cmd = cmd ):
         completer = handlers._server_state.GetFiletypeCompleter( [ 'cpp' ] )
 
+        @WithRetry()
         @patch.object( completer, '_ServerIsInitialized', return_value = False )
         def Test( app, cmd, *args ):
           request = {
@@ -1177,7 +1178,6 @@ class SubcommandsTest( TestCase ):
         RunFixItTest( app, line, column, language, filepath, check )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_FixIt_Ranged( self, app ):
     for test in [
@@ -1237,7 +1237,6 @@ class SubcommandsTest( TestCase ):
     assert_that( actual, equal_to( expected ) )
 
 
-  @WithRetry()
   @IsolatedYcmd( { 'clangd_args': [ '-hidden-features' ] } )
   def test_Subcommands_FixIt_ClangdTweaks( self, app ):
     selection = {
