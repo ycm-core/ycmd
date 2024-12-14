@@ -239,6 +239,9 @@ jobs:
           ~/.npm
       name: Cache test deps
 
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8'
     - name: Install Java
       if: matrix.benchmark == false
       uses: actions/setup-java@v4

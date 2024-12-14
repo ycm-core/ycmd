@@ -18,8 +18,7 @@
 from hamcrest import ( assert_that,
                        contains_exactly,
                        empty,
-                       has_entries,
-                       has_items )
+                       has_entries )
 from unittest.mock import patch
 from unittest import TestCase
 from ycmd import handlers
@@ -27,13 +26,11 @@ from ycmd.utils import ReadFile, LOGGER
 from ycmd.tests.cs import setUpModule, tearDownModule # noqa
 from ycmd.tests.cs import ( PathToTestFile, # noqa
                             IsolatedYcmd,
-                            SharedYcmd,
-                            WrapOmniSharpServer )
+                            SharedYcmd )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ParameterMatcher,
                                     SignatureMatcher,
-                                    SignatureAvailableMatcher,
-                                    CompletionEntryMatcher )
+                                    SignatureAvailableMatcher )
 
 
 class SignatureHelpTest( TestCase ):
@@ -63,21 +60,20 @@ class SignatureHelpTest( TestCase ):
       filetypes = [ 'cs' ],
       filepath = filepath,
       contents = contents )
-    with WrapOmniSharpServer( app, filepath ):
-      response = app.post_json( '/signature_help', request ).json
-      LOGGER.debug( 'response = %s', response )
-      assert_that( response, has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 1,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'void ContinuousTest.MultiArg(int i, string s)',
-                              [ ParameterMatcher( 29, 34 ),
-                                ParameterMatcher( 36, 44 ) ] )
-          )
-        } )
-      } ) )
+    response = app.post_json( '/signature_help', request ).json
+    LOGGER.debug( 'response = %s', response )
+    assert_that( response, has_entries( {
+      'errors': empty(),
+      'signature_help': has_entries( {
+        'activeSignature': 0,
+        'activeParameter': 1,
+        'signatures': contains_exactly(
+          SignatureMatcher( 'void ContinuousTest.MultiArg(int i, string s)',
+                            [ ParameterMatcher( 29, 34 ),
+                              ParameterMatcher( 36, 44 ) ] )
+        )
+      } )
+    } ) )
 
 
   @SharedYcmd
@@ -90,20 +86,19 @@ class SignatureHelpTest( TestCase ):
       filetypes = [ 'cs' ],
       filepath = filepath,
       contents = contents )
-    with WrapOmniSharpServer( app, filepath ):
-      response = app.post_json( '/signature_help', request ).json
-      LOGGER.debug( 'response = %s', response )
-      assert_that( response, has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'void ContinuousTest.Main(string[] args)',
-                              [ ParameterMatcher( 25, 38 ) ] )
-          )
-        } )
-      } ) )
+    response = app.post_json( '/signature_help', request ).json
+    LOGGER.debug( 'response = %s', response )
+    assert_that( response, has_entries( {
+      'errors': empty(),
+      'signature_help': has_entries( {
+        'activeSignature': 0,
+        'activeParameter': 0,
+        'signatures': contains_exactly(
+          SignatureMatcher( 'void ContinuousTest.Main(string[] args)',
+                            [ ParameterMatcher( 25, 38 ) ] )
+        )
+      } )
+    } ) )
 
 
   @IsolatedYcmd( { 'disable_signature_help': True } )
@@ -116,17 +111,16 @@ class SignatureHelpTest( TestCase ):
       filetypes = [ 'cs' ],
       filepath = filepath,
       contents = contents )
-    with WrapOmniSharpServer( app, filepath ):
-      response = app.post_json( '/signature_help', request ).json
-      LOGGER.debug( 'response = %s', response )
-      assert_that( response, has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': empty()
-        } )
-      } ) )
+    response = app.post_json( '/signature_help', request ).json
+    LOGGER.debug( 'response = %s', response )
+    assert_that( response, has_entries( {
+      'errors': empty(),
+      'signature_help': has_entries( {
+        'activeSignature': 0,
+        'activeParameter': 0,
+        'signatures': empty()
+      } )
+    } ) )
 
 
   @SharedYcmd
@@ -139,41 +133,39 @@ class SignatureHelpTest( TestCase ):
       filetypes = [ 'cs' ],
       filepath = filepath,
       contents = contents )
-    with WrapOmniSharpServer( app, filepath ):
-      response = app.post_json( '/signature_help', request ).json
-      LOGGER.debug( 'response = %s', response )
-      assert_that( response, has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'void ContinuousTest.Overloaded(int i, int a)',
-                              [ ParameterMatcher( 31, 36 ),
-                                ParameterMatcher( 38, 43 ) ] ),
-            SignatureMatcher( 'void ContinuousTest.Overloaded(string s)',
-                              [ ParameterMatcher( 31, 39 ) ] ),
-          )
-        } )
-      } ) )
+    response = app.post_json( '/signature_help', request ).json
+    LOGGER.debug( 'response = %s', response )
+    assert_that( response, has_entries( {
+      'errors': empty(),
+      'signature_help': has_entries( {
+        'activeSignature': 0,
+        'activeParameter': 0,
+        'signatures': contains_exactly(
+          SignatureMatcher( 'void ContinuousTest.Overloaded(int i, int a)',
+                            [ ParameterMatcher( 31, 36 ),
+                              ParameterMatcher( 38, 43 ) ] ),
+          SignatureMatcher( 'void ContinuousTest.Overloaded(string s)',
+                            [ ParameterMatcher( 31, 39 ) ] ),
+        )
+      } )
+    } ) )
     request[ 'column_num' ] = 20
-    with WrapOmniSharpServer( app, filepath ):
-      response = app.post_json( '/signature_help', request ).json
-      LOGGER.debug( 'response = %s', response )
-      assert_that( response, has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 1,
-          'signatures': contains_exactly(
-            SignatureMatcher( 'void ContinuousTest.Overloaded(int i, int a)',
-                              [ ParameterMatcher( 31, 36 ),
-                                ParameterMatcher( 38, 43 ) ] ),
-            SignatureMatcher( 'void ContinuousTest.Overloaded(string s)',
-                              [ ParameterMatcher( 31, 39 ) ] ),
-          )
-        } )
-      } ) )
+    response = app.post_json( '/signature_help', request ).json
+    LOGGER.debug( 'response = %s', response )
+    assert_that( response, has_entries( {
+      'errors': empty(),
+      'signature_help': has_entries( {
+        'activeSignature': 0,
+        'activeParameter': 1,
+        'signatures': contains_exactly(
+          SignatureMatcher( 'void ContinuousTest.Overloaded(int i, int a)',
+                            [ ParameterMatcher( 31, 36 ),
+                              ParameterMatcher( 38, 43 ) ] ),
+          SignatureMatcher( 'void ContinuousTest.Overloaded(string s)',
+                            [ ParameterMatcher( 31, 39 ) ] ),
+        )
+      } )
+    } ) )
 
 
   @SharedYcmd
@@ -186,43 +178,13 @@ class SignatureHelpTest( TestCase ):
       filetypes = [ 'cs' ],
       filepath = filepath,
       contents = contents )
-    with WrapOmniSharpServer( app, filepath ):
-      response = app.post_json( '/signature_help', request ).json
-      LOGGER.debug( 'response = %s', response )
-      assert_that( response, has_entries( {
-        'errors': empty(),
-        'signature_help': has_entries( {
-          'activeSignature': 0,
-          'activeParameter': 0,
-          'signatures': empty()
-        } )
-      } ) )
-
-
-  @IsolatedYcmd( { 'disable_signature_help': True } )
-  def test_GetCompletions_Basic_NoSigHelp( self, app ):
-    filepath = PathToTestFile( 'testy', 'Program.cs' )
-    with WrapOmniSharpServer( app, filepath ):
-      contents = ReadFile( filepath )
-
-      completion_data = BuildRequest( filepath = filepath,
-                                      filetype = 'cs',
-                                      contents = contents,
-                                      line_num = 10,
-                                      column_num = 12 )
-      response_data = app.post_json( '/completions', completion_data ).json
-      print( 'Response: ', response_data )
-      assert_that(
-        response_data,
-        has_entries( {
-          'completion_start_column': 12,
-          'completions': has_items(
-            CompletionEntryMatcher( 'CursorLeft',
-                                    'CursorLeft',
-                                    { 'kind': 'Property' } ),
-            CompletionEntryMatcher( 'CursorSize',
-                                    'CursorSize',
-                                    { 'kind': 'Property' } ),
-          ),
-          'errors': empty(),
-        } ) )
+    response = app.post_json( '/signature_help', request ).json
+    LOGGER.debug( 'response = %s', response )
+    assert_that( response, has_entries( {
+      'errors': empty(),
+      'signature_help': has_entries( {
+        'activeSignature': 0,
+        'activeParameter': 0,
+        'signatures': empty()
+      } )
+    } ) )

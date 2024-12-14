@@ -1,3 +1,0 @@
-class Class{
-    int Method()
-}
