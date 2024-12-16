@@ -1463,15 +1463,14 @@ class LanguageServerCompleter( Completer ):
         continue
 
       if not resolve_completions and self._resolve_completion_items:
-        extra_data = {} if extra_data is None else extra_data
-
-        # Deferred resolve - the client must read this and send the
-        # /resolve_completion request to update the candidate set
-        extra_data[ 'resolve' ] = idx
-
-        # Store the actual item in the extra_data area of the completion item.
-        # We'll use this later to do the resolve.
-        extra_data[ 'item' ] = item
+        extra_data = CompletionItemExtraDataDict(
+          ycmd_data = {} if extra_data is None else extra_data,
+          # Deferred resolve - the client must read this and send the
+          # /resolve_completion request to update the candidate set
+          resolve = idx,
+          # Store the actual item in the extra_data area of the completion item.
+          # We'll use this later to do the resolve.
+          lsp_data = item )
 
       min_start_codepoint = min( min_start_codepoint, start_codepoint )
 
@@ -3801,3 +3800,20 @@ def RetryOnFailure( expected_error_codes, num_retries = 3 ):
         continue
       else:
         raise
+
+
+class CompletionItemExtraDataDict( dict ):
+  """ Behaves almost exactly like the superclass, but
+      we do not want to serialize lsp_data and send to the client.
+      Instead, we keep that object separate, but still accessible through
+      __getitem__.
+      Note that iterating over this dictionary will also skip the lsp_data. """
+  def __init__( self, ycmd_data, resolve, lsp_data ):
+    ycmd_data[ 'resolve' ] = resolve
+    super().__init__( ycmd_data )
+    self.lsp_data = lsp_data
+
+  def __getitem__( self, key ):
+    if key == 'item':
+      return self.lsp_data
+    return super().__getitem__( key )
