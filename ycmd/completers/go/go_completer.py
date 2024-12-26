@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
+from pathlib import Path
+import subprocess
 import json
 import logging
 import os
@@ -34,6 +36,18 @@ PATH_TO_GOPLS = os.path.abspath( os.path.join( os.path.dirname( __file__ ),
   utils.ExecutableName( 'gopls' ) ) )
 
 
+def GetGoModCachePath():
+  try:
+    result = subprocess.run(['go', 'env', 'GOMODCACHE'], capture_output=True, text=True, check=True)
+    return [ result.stdout.strip() ]
+  except subprocess.CalledProcessError as e:
+    utils.LOGGER.info( 'Error getting GOMODCACHE: %s', e )
+    return []
+
+
+PATHS_TO_GO_MOD_CACHE = GetGoModCachePath()
+
+
 def ShouldEnableGoCompleter( user_options ):
   server_exists = utils.FindExecutableWithFallback(
       user_options[ 'gopls_binary_path' ],
@@ -51,6 +65,12 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
     self._gopls_path = utils.FindExecutableWithFallback(
         user_options[ 'gopls_binary_path' ],
         PATH_TO_GOPLS )
+    # Exclude paths within the Go module cache or other directories where a go.sum cannot be created.
+    excluded_workspace_paths = user_options.get('gopls_excluded_workspace_paths')
+    if isinstance(excluded_workspace_paths, list):
+      self._excluded_workspace_paths = excluded_workspace_paths
+    else:
+      self._excluded_workspace_paths = PATHS_TO_GO_MOD_CACHE
 
 
   def GetServerName( self ):
@@ -63,6 +83,18 @@ class GoCompleter( language_server_completer.LanguageServerCompleter ):
     # TODO: add support for LSP workspaces to allow users to change project
     # without having to restart GOPLS.
     return [ 'go.mod' ]
+
+
+  def GetWorkspaceForFilepath( self, filepath, strict = False ):
+    filepath_abs = os.path.abspath(filepath)
+    if any(excluded_path in filepath_abs for excluded_path in self._excluded_workspace_paths):
+      return None
+    project_root_files = self.GetProjectRootFiles()
+    for folder in utils.PathsToAllParentFolders( filepath ):
+      for root_file in project_root_files:
+        if next( Path( folder ).glob( root_file ), [] ):
+          return folder
+    return None if strict else os.path.dirname( filepath )
 
 
   def GetCommandLine( self ):

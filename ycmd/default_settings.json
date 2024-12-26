@@ -38,6 +38,7 @@
   "disable_signature_help": 0,
   "gopls_binary_path": "",
   "gopls_args": [],
+  "gopls_excluded_workspace_paths": [],
   "rust_toolchain_root": "",
   "tsserver_binary_path": "",
   "roslyn_binary_path": "",
