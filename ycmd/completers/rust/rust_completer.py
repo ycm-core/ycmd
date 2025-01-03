@@ -18,6 +18,7 @@
 import logging
 import os
 from subprocess import PIPE
+from pathlib import Path
 
 from ycmd import responses, utils
 from ycmd.completers.language_server import language_server_completer
@@ -107,12 +108,44 @@ class RustCompleter( language_server_completer.LanguageServerCompleter ):
     return env
 
 
-  def GetProjectRootFiles( self ):
-    # Without LSP workspaces support, RA relies on the rootUri to detect a
+  def GetWorkspaceForFilepath( self, filepath, strict = False ):
+    # For every unique workspace, rust analyzer launches a nuclear
+    # weapon^h^h^h^h new server and indexes the internet. Try to minimise the
+    # number of such launches.
+
+    # If filepath is a subdirectory of the manually-specified project root, use
+    # the project root
+    if 'project_directory' in self._settings:
+      project_root = utils.AbsolutePath( self._settings[ 'project_directory' ],
+                                         self._extra_conf_dir )
+
+      prp = Path( project_root )
+      for parent in Path( filepath ).absolute().parents:
+        if parent == prp:
+          return project_root
+
+    # Otherwise, we might not have one configured, or it' a totally different
     # project.
-    # TODO: add support for LSP workspaces to allow users to change project
-    # without having to restart RA.
-    return [ 'Cargo.toml' ]
+    #
+    # Our main heuristic is:
+    #  - find the nearest Cargo.lock, and assume that's the root
+    #  - otherwise find the _furthest_ Cargo.toml and assume that's the root
+    #  - otherwise use the project root directory that we previously calculated.
+    #
+    # We never use the directory of the file as that could just be anything
+    # random, and we might as well just use the original project in that case
+    if candidate := self.FindProjectFromRootFiles( filepath,
+                                                   [ 'Cargo.lock' ],
+                                                   nearest = True ):
+      return candidate
+
+    if candidate := self.FindProjectFromRootFiles( filepath,
+                                                   [ 'Cargo.toml' ],
+                                                   nearest = False ):
+      return candidate
+
+    # Never use the
+    return None if strict else self._project_directory
 
 
   def ServerIsReady( self ):

@@ -18,6 +18,8 @@
 from hamcrest import assert_that, contains_exactly, equal_to, has_entry
 from unittest.mock import patch
 from unittest import TestCase
+import contextlib
+from pathlib import Path
 
 from ycmd.completers.language_server.language_server_completer import (
     LanguageServerConnectionTimeout )
@@ -26,7 +28,10 @@ from ycmd.tests.rust import ( PathToTestFile,
                               StartRustCompleterServerInDirectory )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     MockProcessTerminationTimingOut,
-                                    WaitUntilCompleterServerReady )
+                                    WaitUntilCompleterServerReady,
+                                    TemporaryTestDir )
+
+from ycmd import handlers
 
 
 def AssertRustCompleterServerIsRunning( app, is_running ):
@@ -138,3 +143,157 @@ class ServerManagementTest( TestCase ):
                        has_entry( 'is_running', False )
                      ) )
                    ) )
+
+
+@contextlib.contextmanager
+def TemporaryProjectLayout( project_files ):
+  import os
+  with TemporaryTestDir() as project_dir:
+    project_dir_path = Path( project_dir )
+    for file, contents in project_files.items():
+      file = project_dir_path / file
+      os.makedirs( file.parent, exist_ok = True )
+      file.write_text( contents )
+    yield project_dir_path
+
+
+class ProjectDetectionTest( TestCase ):
+  @IsolatedYcmd()
+  def test_ProjectDetection_CargoTomlFiles_None( self, app ):
+    with TemporaryProjectLayout( {
+      'src/main.rs': '',
+      'src/foo/main.rs': '',
+      'foo/main.rs': '',
+    } ) as project_dir:
+      StartRustCompleterServerInDirectory( app, project_dir )
+      completer = handlers._server_state.GetFiletypeCompleter( [ 'rust' ] )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/main.rs',
+                                           strict=True ),
+        equal_to( None )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/foo/main.rs',
+                                           strict=True ),
+        equal_to( None )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'foo/main.rs',
+                                           strict=True ),
+        equal_to( None )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/main.rs',
+                                           strict=False ),
+        equal_to( str( project_dir / 'src' ) )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/foo/main.rs',
+                                           strict=False ),
+        equal_to( str( project_dir / 'src' ) )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'foo/main.rs',
+                                           strict=False ),
+        equal_to( str( project_dir / 'src' ) )
+      )
+
+  @IsolatedYcmd()
+  def test_ProjectDetection_CargoTomlFiles_Justone( self, app ):
+    with TemporaryProjectLayout( {
+      'Cargo.toml': '',
+      'src/main.rs': '',
+      'src/foo/main.rs': '',
+      'foo/main.rs': '',
+    } ) as project_dir:
+      StartRustCompleterServerInDirectory( app, project_dir )
+      completer = handlers._server_state.GetFiletypeCompleter( [ 'rust' ] )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/main.rs' ),
+        equal_to( str( project_dir ) )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/foo/main.rs' ),
+        equal_to( str( project_dir ) )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'foo/main.rs' ),
+        equal_to( str( project_dir ) )
+      )
+
+  @IsolatedYcmd()
+  def test_ProjectDetection_CargoTomlFiles_Nogaps( self, app ):
+    with TemporaryProjectLayout( {
+      'Cargo.toml': '',
+      'src/main.rs': '',
+      'src/Cargo.toml': '',
+      'src/foo/main.rs': '',
+      'src/foo/Cargo.toml': '',
+    } ) as project_dir:
+      StartRustCompleterServerInDirectory( app, project_dir )
+      completer = handlers._server_state.GetFiletypeCompleter( [ 'rust' ] )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/main.rs' ),
+        equal_to( str( project_dir ) )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/foo/main.rs' ),
+        equal_to( str( project_dir ) )
+      )
+
+  @IsolatedYcmd()
+  def test_ProjectDetection_CargoTomlFiles_Gaps( self, app ):
+    # This result is not ideal, but better in other tests/cases below
+    # This is the "historical" behaviour
+    with TemporaryProjectLayout( {
+      'Cargo.toml': '',
+      'src/foo/main.rs': '',
+      'src/foo/Cargo.toml': '',
+      'src/bar/main.rs': '',
+      'src/bar/Cargo.toml': '',
+    } ) as project_dir:
+      StartRustCompleterServerInDirectory( app, project_dir )
+      completer = handlers._server_state.GetFiletypeCompleter( [ 'rust' ] )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/foo/main.rs' ),
+        equal_to( str( project_dir / 'src' / 'foo' ) )
+      )
+      assert_that(
+        completer.GetWorkspaceForFilepath( project_dir / 'src/bar/main.rs' ),
+        equal_to( str( project_dir / 'src' / 'bar' ) )
+      )
+
+
+  @IsolatedYcmd()
+  def test_ProjectDetection_CargoLockFiles( self, app ):
+    with self.subTest( 'justone' ):
+      with TemporaryProjectLayout( {
+        'Cargo.lock': '',
+        'src/main.rs': '',
+        'src/Cargo.toml': '',
+        'src/foo/main.rs': '',
+        'src/foo/Cargo.toml': '',
+      } ) as project_dir:
+        StartRustCompleterServerInDirectory( app, project_dir )
+        completer = handlers._server_state.GetFiletypeCompleter( [ 'rust' ] )
+        assert_that(
+          completer.GetWorkspaceForFilepath( project_dir / 'src/main.rs' ),
+          equal_to( str( project_dir ) )
+        )
+        assert_that(
+          completer.GetWorkspaceForFilepath( project_dir / 'src/foo/main.rs' ),
+          equal_to( str( project_dir ) )
+        )
+
+
+  @IsolatedYcmd()
+  def test_ProjectDetection_LockPrecidenceOverToml( self, app ):
+    pass
+
+  @IsolatedYcmd()
+  def test_ProjectDetection_ManualProjectOverrideWithinPath( self, app ):
+    pass
+
+  @IsolatedYcmd()
+  def test_ProjectDetection_ManualProjectIgnoredOutside( self, app ):
+    pass
