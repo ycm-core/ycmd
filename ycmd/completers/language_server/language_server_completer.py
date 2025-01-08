@@ -1917,16 +1917,12 @@ class LanguageServerCompleter( Completer ):
         # checked and set in a mutex to prevent race conditions.
         with self._server_info_mutex:
             if self._server_started:
-                LOGGER.info( 'Server %s already started from another thread',
+                LOGGER.debug( 'Server %s already started from another thread',
                             self.GetServerName() )
                 return
             self._server_started = True
 
         self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
-
-        LOGGER.info('KS DEBUG: begin sleep in _StartAndInitializeServer')
-        time.sleep(2)
-        LOGGER.info('KS DEBUG: end sleep in _StartAndInitializeServer')
 
         if self.StartServer( request_data, *args, **kwargs ):
           self._SendInitialize( request_data )
