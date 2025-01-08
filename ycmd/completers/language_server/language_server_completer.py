@@ -1915,6 +1915,9 @@ class LanguageServerCompleter( Completer ):
     self._server_started = False
     self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
 
+    LOGGER.info('KS DEBUG: begin sleep in _StartAndInitializeServer')
+    time.sleep(2)
+    LOGGER.info('KS DEBUG: end sleep in _StartAndInitializeServer')
     # Only attempt to start the server once. Set this after above call as it may
     # throw an exception
     self._server_started = True
