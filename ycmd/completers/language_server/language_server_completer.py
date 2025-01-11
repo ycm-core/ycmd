@@ -1913,19 +1913,19 @@ class LanguageServerCompleter( Completer ):
     automatically in OnFileReadyToParse, but this may be used in completer
     subcommands that require restarting the underlying server."""
     try:
-        # Only attempt to start the server once - _server_started must be
-        # checked and set in a mutex to prevent race conditions.
-        with self._server_info_mutex:
-            if self._server_started:
-                LOGGER.debug( 'Server %s already started from another thread',
-                            self.GetServerName() )
-                return
-            self._server_started = True
+      # Only attempt to start the server once - _server_started must be
+      # checked and set in a mutex to prevent race conditions.
+      with self._server_info_mutex:
+        if self._server_started:
+          LOGGER.debug( 'Server %s already started from another thread',
+                      self.GetServerName() )
+          return
+        self._server_started = True
 
-        self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
+      self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
 
-        if self.StartServer( request_data, *args, **kwargs ):
-          self._SendInitialize( request_data )
+      if self.StartServer( request_data, *args, **kwargs ):
+        self._SendInitialize( request_data )
 
     except Exception:
       LOGGER.exception( 'Error while starting %s', self.GetServerName() )
