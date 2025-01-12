@@ -155,6 +155,7 @@ def RunHierarchyTest( app, kind, direction, location, expected, code ):
   RunTest( app, test )
 
 
+@WithRetry()
 def RunFixItTest( app,
                   description,
                   filepath,
@@ -679,7 +680,6 @@ class SubcommandsTest( TestCase ):
                                'Cannot jump to location' ) )
 
 
-  @WithRetry()
   @IsolatedYcmd( {
     'extra_conf_globlist': PathToTestFile( 'multiple_projects', '*' )
   } )
@@ -722,14 +722,11 @@ class SubcommandsTest( TestCase ):
                                        'com',
                                        'test',
                                        'TestWidgetImpl.java' )
-    for desc, request, expect in [
+    for desc, filepath, line, column, expect in [
         ( 'GoToReferences works across multiple projects',
-          {
-            'command': 'GoToReferences',
-            'filepath': utils_java,
-            'line_num': 5,
-            'column_num': 22,
-          },
+          utils_java,
+          5,
+          22,
           {
             'response': requests.codes.ok,
             'data': contains_inanyorder(
@@ -739,12 +736,9 @@ class SubcommandsTest( TestCase ):
             )
           } ),
         ( 'GoToReferences works in an unrelated project at the same time',
-          {
-            'command': 'GoToReferences',
-            'filepath': abstract_test_widget,
-            'line_num': 10,
-            'column_num': 15,
-          },
+          abstract_test_widget,
+          10,
+          15,
           {
             'response': requests.codes.ok,
             'data': contains_inanyorder(
@@ -755,16 +749,20 @@ class SubcommandsTest( TestCase ):
             )
           } ),
     ]:
-      with self.subTest( desc = desc, request = request, expect = expect ):
-        filepath = request[ 'filepath' ]
+      with self.subTest( desc = desc,
+                         filepath = filepath,
+                         line = line,
+                         column = column,
+                         expect = expect ):
         StartJavaCompleterServerWithFile( app, filepath )
 
-
-        RunTest( app, {
-          'description': desc,
-          'request': request,
-          'expect': expect
-        } )
+        RunGoToTest( app,
+                     desc,
+                     filepath,
+                     line,
+                     column,
+                     'GoToReferences',
+                     expect )
 
 
   @WithRetry()
@@ -1102,7 +1100,6 @@ class SubcommandsTest( TestCase ):
 
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_FixIt_SingleDiag_MultipleOption_Insertion( self, app ):
     import os
@@ -1259,7 +1256,6 @@ class SubcommandsTest( TestCase ):
         RunFixItTest( app, description, filepath, 19, column, fixits_for_line )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_FixIt_SingleDiag_SingleOption_Modify( self, app ):
     filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1327,7 +1323,6 @@ class SubcommandsTest( TestCase ):
                   filepath, 27, 12, fixits )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_FixIt_SingleDiag_MultiOption_Delete( self, app ):
     filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1404,7 +1399,6 @@ class SubcommandsTest( TestCase ):
                   filepath, 15, 29, fixits )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_FixIt_MultipleDiags( self, app ):
     for description, column, expect_fixits in [
@@ -1626,7 +1620,6 @@ class SubcommandsTest( TestCase ):
     )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_FixIt_NoDiagnostics( self, app ):
     filepath = PathToTestFile( 'simple_eclipse_project',
@@ -1652,7 +1645,6 @@ class SubcommandsTest( TestCase ):
                                      'chunks': instance_of( list ) } ) ) } ) )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_FixIt_Unicode( self, app ):
     fixits = has_entries( {
@@ -1720,7 +1712,6 @@ class SubcommandsTest( TestCase ):
                   TEST_JAVA, 13, 1, fixits )
 
 
-  @WithRetry()
   @IsolatedYcmd()
   def test_Subcommands_FixIt_InvalidURI( self, app ):
     filepath = PathToTestFile( 'simple_eclipse_project',

@@ -62,6 +62,10 @@ def StartJavaCompleterServerWithFile( app, file_path ):
                    event_name = 'FileReadyToParse',
                    filepath = file_path,
                    filetype = 'java' ) )
+  WaitUntilJavaCompleterServerReady( app )
+
+
+def WaitUntilJavaCompleterServerReady( app ):
   WaitUntilCompleterServerReady( app, 'java', SERVER_STARTUP_TIMEOUT )
 
 

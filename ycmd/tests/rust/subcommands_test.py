@@ -138,6 +138,7 @@ def RunHierarchyTest( app, kind, direction, location, expected, code ):
   RunTest( app, test )
 
 
+@WithRetry()
 def RunGoToTest( app, command, test, *, project_root = 'common' ):
   folder = PathToTestFile( project_root, 'src' )
   filepath = os.path.join( folder, test[ 'req' ][ 0 ] )
@@ -423,7 +424,6 @@ class SubcommandsTest( TestCase ):
         RunGoToTest( app, 'GoToType', test )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoTo( self, app ):
     for test, command in itertools.product(
@@ -442,7 +442,6 @@ class SubcommandsTest( TestCase ):
         RunGoToTest( app, command, test )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoToImplementation( self, app ):
     for test in [
@@ -456,7 +455,6 @@ class SubcommandsTest( TestCase ):
         RunGoToTest( app, 'GoToImplementation', test )
 
 
-  @WithRetry()
   @SharedYcmd
   def test_Subcommands_GoToImplementation_Failure( self, app ):
     RunGoToTest( app,
@@ -563,31 +561,37 @@ class SubcommandsTest( TestCase ):
   def test_Subcommands_FixIt_Basic( self, app ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
-    RunFixItTest( app, {
-      'description': 'Simple FixIt test',
-      'chosen_fixit': 2,
-      'request': {
-        'command': 'FixIt',
-        'line_num': 18,
-        'column_num': 2,
-        'filepath': filepath
-      },
-      'expect': {
-        'response': requests.codes.ok,
-        'data': has_entries( {
-          'fixits': has_item( has_entries( {
-            'chunks': contains_exactly(
-              ChunkMatcher( 'pub(crate) ',
-                            LocationMatcher( filepath, 18, 1 ),
-                            LocationMatcher( filepath, 18, 1 ) )
-            )
-          } ) )
+    for line, column, choice, chunks in [
+      ( 18, 2, 2, [
+        ChunkMatcher( 'pub(crate) ',
+                      LocationMatcher( filepath, 18, 1 ),
+                      LocationMatcher( filepath, 18, 1 ) ) ] ),
+      ( 27, 5, 0, [
+        ChunkMatcher( 'mut ',
+                      LocationMatcher( filepath, 26, 9 ),
+                      LocationMatcher( filepath, 26, 9 ) ) ] ),
+    ]:
+      with self.subTest( line = line, column = column, choice = choice ):
+        RunFixItTest( app, {
+          'description': 'Simple FixIt test',
+          'chosen_fixit': choice,
+          'request': {
+            'command': 'FixIt',
+            'line_num': line,
+            'column_num': column,
+            'filepath': filepath
+          },
+          'expect': {
+            'response': requests.codes.ok,
+            'data': has_entries( {
+              'fixits': has_item( has_entries( {
+                'chunks': contains_exactly( *chunks )
+              } ) )
+            } )
+          },
         } )
-      },
-    } )
 
 
-  @WithRetry()
   @IsolatedYcmd()
   def test_Subcommands_GoTo_WorksAfterChangingProject( self, app ):
     filepath = PathToTestFile( 'macro', 'src', 'main.rs' )
@@ -599,7 +603,7 @@ class SubcommandsTest( TestCase ):
           'macro'
         ),
         (
-          { 'req': ( 'main.rs', 14, 19 ), 'res': ( 'test.rs', 4, 12 ) },
+          { 'req': ( 'main.rs', 9, 24 ), 'res': ( 'main.rs', 6, 8 ) },
           'common'
         ),
     ]:

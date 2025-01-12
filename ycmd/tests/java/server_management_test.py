@@ -36,15 +36,15 @@ from ycmd.tests.java import ( PathToTestFile,
                               isolated_app,
                               IsolatedYcmd,
                               StartJavaCompleterServerInDirectory,
-                              StartJavaCompleterServerWithFile )
+                              StartJavaCompleterServerWithFile,
+                              WaitUntilJavaCompleterServerReady )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     CompleterProjectDirectoryMatcher,
                                     LocationMatcher,
                                     MockProcessTerminationTimingOut,
                                     RangeMatcher,
                                     TemporaryTestDir,
-                                    WaitForDiagnosticsToBeReady,
-                                    WaitUntilCompleterServerReady )
+                                    WaitForDiagnosticsToBeReady )
 from ycmd import utils, handlers
 
 
@@ -104,7 +104,7 @@ class ServerManagementTest( TestCase ):
       ),
     )
 
-    WaitUntilCompleterServerReady( app, 'java' )
+    WaitUntilJavaCompleterServerReady( app )
 
     app.post_json(
       '/event_notification',
@@ -147,7 +147,7 @@ class ServerManagementTest( TestCase ):
           ),
         )
 
-        WaitUntilCompleterServerReady( app, 'java' )
+        WaitUntilJavaCompleterServerReady( app )
 
         assert_that(
           app.post_json( '/debug_info',
@@ -197,7 +197,7 @@ class ServerManagementTest( TestCase ):
           ),
         )
 
-        WaitUntilCompleterServerReady( app, 'java' )
+        WaitUntilJavaCompleterServerReady( app )
 
         assert_that(
           app.post_json( '/debug_info',
@@ -509,15 +509,19 @@ class ServerManagementTest( TestCase ):
     print( f'pid: { pid }' )
     process = psutil.Process( pid )
 
-    completer = handlers._server_state.GetFiletypeCompleter( [ 'java' ] )
-
     # In this test we mock out the GetResponse method, which is used to send
     # the shutdown request. This means we only send the exit notification. It's
     # possible that the server won't like this, but it seems reasonable for it
     # to actually exit at that point.
-    with patch.object( completer.GetConnection(),
-                       'GetResponse',
-                       side_effect = RuntimeError ):
+    from ycmd.completers.language_server import language_server_completer
+    from ycmd.completers.language_server import language_server_protocol as lsp
+
+    def BrokenShutdown( request_id ):
+      return lsp.BuildRequest( None, 'shutdown', None )
+
+    with patch.object( language_server_completer.lsp,
+                       'Shutdown',
+                       side_effect = BrokenShutdown ):
       app.post_json(
         '/run_completer_command',
         BuildRequest(

@@ -2995,22 +2995,29 @@ class LanguageServerCompleter( Completer ):
       # provider, but send a LSP Command instead. We can not resolve those with
       # codeAction/resolve!
       if ( 'command' not in code_action or
-           isinstance( code_action[ 'command' ], str ) ):
+           not isinstance( code_action[ 'command' ], str ) ):
         request_id = self.GetConnection().NextRequestId()
         msg = lsp.CodeActionResolve( request_id, code_action )
-        code_action = self.GetConnection().GetResponse(
-            request_id,
-            msg,
-            REQUEST_TIMEOUT_COMMAND )[ 'result' ]
+        try:
+          code_action = self.GetConnection().GetResponse(
+              request_id,
+              msg,
+              REQUEST_TIMEOUT_COMMAND )[ 'result' ]
+        except ResponseFailedException:
+          # Even if resolving has failed, we might still be able to apply
+          # what we have previously received...
+          # See https://github.com/rust-lang/rust-analyzer/issues/18428
+          if not ( 'edit' in code_action or 'command' in code_action ):
+            raise
 
     result = []
     if 'edit' in code_action:
       result.append( self.CodeActionLiteralToFixIt( request_data,
                                                     code_action ) )
 
-    if 'command' in code_action:
+    if command := code_action.get( 'command' ):
       assert not result, 'Code actions with edit and command is not supported.'
-      if isinstance( code_action[ 'command' ], str ):
+      if isinstance( command, str ):
         unresolved_command_fixit = self.CommandToFixIt( request_data,
                                                         code_action )
       else:

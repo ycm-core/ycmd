@@ -21,3 +21,9 @@ fn             format_test() {
         a : 
 i32 = 5;
 }
+
+fn code_action_literal() -> i32 {
+    let foo = 5;
+    foo += 1;
+    foo
+}
