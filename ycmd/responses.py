@@ -197,12 +197,14 @@ class Diagnostic:
                 location_extent,
                 text,
                 kind,
+                severity = None,
                 fixits = [] ):
     self.ranges_ = ranges
     self.location_ = location
     self.location_extent_ = location_extent
     self.text_ = text
     self.kind_ = kind
+    self.severity_ = severity
     self.fixits_ = fixits
 
 
@@ -280,8 +282,7 @@ class FixItChunk:
 def BuildDiagnosticData( diagnostic ):
   kind = ( diagnostic.kind_.name if hasattr( diagnostic.kind_, 'name' )
            else diagnostic.kind_ )
-
-  return {
+  diag = {
     'ranges': [ BuildRangeData( x ) for x in diagnostic.ranges_ ],
     'location': BuildLocationData( diagnostic.location_ ),
     'location_extent': BuildRangeData( diagnostic.location_extent_ ),
@@ -289,6 +290,15 @@ def BuildDiagnosticData( diagnostic ):
     'kind': kind,
     'fixit_available': len( diagnostic.fixits_ ) > 0,
   }
+
+  severity = (
+    diagnostic.kind_.severity if hasattr( diagnostic.kind_, 'severity' )
+           else diagnostic.severity_ )
+
+  if severity is not None:
+    diag[ 'severity' ] = severity
+
+  return diag
 
 
 def BuildDiagnosticResponse( diagnostics,
@@ -304,7 +314,8 @@ def BuildDiagnosticResponse( diagnostics,
       location,
       location_extent,
       'Maximum number of diagnostics exceeded.',
-      'ERROR'
+      'ERROR',
+      severity = 1,
     ) )
   return [ BuildDiagnosticData( diagnostic ) for diagnostic in diagnostics ]
 
