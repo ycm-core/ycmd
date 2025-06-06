@@ -823,11 +823,12 @@ def UTF16CodeUnitsToCodepoints( line_value, code_unit_offset ):
     # is one-past-the-end of the string in unicode codepoints
     return len( line_value ) + 1
 
-  hi_byte_at_offset = value_as_utf16_bytes[byte_offset_utf16 + 1]
-  if 0xdc <= hi_byte_at_offset <= 0xdf:
-    # If we are in the middle of a surrogate pair, then advance the offset
-    # further to skip the pair
-    code_unit_offset += 1
+  if byte_offset_utf16 < len( value_as_utf16_bytes ):
+    hi_byte_at_offset = value_as_utf16_bytes[ byte_offset_utf16 + 1 ]
+    if 0xdc <= hi_byte_at_offset <= 0xdf:
+      # If we are in the middle of a surrogate pair, then advance the offset
+      # further to skip the pair
+      code_unit_offset += 1
 
   bytes_included = value_as_utf16_bytes[ : code_unit_offset * 2 ]
   return len( bytes_included.decode( 'utf-16-le' ) )
