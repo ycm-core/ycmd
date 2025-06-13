@@ -42,7 +42,7 @@ else()
   FetchContent_Declare(
     gmock
     GIT_REPOSITORY https://github.com/google/googletest
-    GIT_TAG f5e592d8ee5ffb1d9af5be7f715ce3576b8bf9c4
+    GIT_TAG 52eb8108c5bdec04579160ae17225d66034bd723
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gmock
   )
   FetchContent_MakeAvailable( gmock )
