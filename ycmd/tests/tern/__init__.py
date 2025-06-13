@@ -36,7 +36,6 @@ def setUpModule():
 
 
 def tearDownModule():
-  global shared_app
   StopCompleterServer( shared_app, 'tern' )
 
 
@@ -50,8 +49,6 @@ def StartJavaScriptCompleterServerInDirectory( app, directory ):
 
 
 def SharedYcmd( test ):
-  global shared_app
-
   @functools.wraps( test )
   def Wrapper( test_case_instance, *args, **kwargs ):
     ClearCompletionsCache()

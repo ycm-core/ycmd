@@ -44,14 +44,10 @@ def setUpModule():
 
 
 def tearDownModule():
-  global shared_app
-
   StopCompleterServer( shared_app, 'javascript' )
 
 
 def SharedYcmd( test ):
-  global shared_app
-
   @functools.wraps( test )
   def Wrapper( test_case_instance, *args, **kwargs ):
     ClearCompletionsCache()

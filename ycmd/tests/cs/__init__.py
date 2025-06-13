@@ -45,14 +45,11 @@ def setUpModule():
 
 
 def tearDownModule():
-  global shared_app, shared_filepaths
   for filepath in shared_filepaths.get( shared_app, [] ):
     StopCompleterServer( shared_app, 'cs', filepath )
 
 
 def SharedYcmd( test ):
-  global shared_app
-
   @functools.wraps( test )
   def Wrapper( test_case_instance, *args, **kwargs ):
     ClearCompletionsCache()
@@ -69,7 +66,6 @@ def IsolatedYcmd( custom_options = {} ):
         try:
           test( test_case_instance, app, *args, **kwargs )
         finally:
-          global shared_filepaths
           for filepath in shared_filepaths.get( app, [] ):
             StopCompleterServer( app, 'cs', filepath )
     return Wrapper
@@ -101,9 +97,6 @@ def GetDiagnostics( app, filepath ):
 
 @contextmanager
 def WrapOmniSharpServer( app, filepath ):
-  global shared_filepaths
-  global shared_log_indexes
-
   if filepath not in shared_filepaths.setdefault( app, [] ):
     GetDiagnostics( app, filepath )
     shared_filepaths[ app ].append( filepath )
