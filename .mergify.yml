@@ -1,8 +1,10 @@
 # https://blog.mergify.com/strict-mode-deprecation/
 queue_rules:
-  - name: default
-    # These define the conditions to get out of the merge queue
-    conditions:
+  - name: duplicated default from Automatic merge on Azure Pipelines and Reviewable
+      successes
+    queue_conditions:
+      - base=master
+      - "#approved-reviews-by>=2"
       - status-success=macos-14 - C++ Benchmark
       - status-success=macos-14 - test run
       - status-success=ubuntu-24.04 - C++ Benchmark
@@ -14,6 +16,81 @@ queue_rules:
       - status-success=Windows MSVC 17 x64 - test run
       - status-success=Windows MSVC 17 x86 - test run
       - status-success=Windows MSVC 17 x64 - C++ Benchmark
+      - status-success=code-review/reviewable
+    merge_conditions:
+      - status-success=macos-14 - C++ Benchmark
+      - status-success=macos-14 - test run
+      - status-success=ubuntu-24.04 - C++ Benchmark
+      - status-success=ubuntu-24.04 - without libclang completer - test run
+      - status-success=ubuntu-24.04 - with Clang compiler - test run
+      - status-success=ubuntu-24.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 17 x64 - test run
+      - status-success=Windows MSVC 17 x86 - test run
+      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+    merge_method: merge
+  - name: duplicated default from Manual merge on Azure Pipelines and Maintainer Override
+    queue_conditions:
+      - base=master
+      - status-success=macos-14 - C++ Benchmark
+      - status-success=macos-14 - test run
+      - status-success=ubuntu-24.04 - C++ Benchmark
+      - status-success=ubuntu-24.04 - without libclang completer - test run
+      - status-success=ubuntu-24.04 - with Clang compiler - test run
+      - status-success=ubuntu-24.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 17 x64 - test run
+      - status-success=Windows MSVC 17 x86 - test run
+      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+      - label="Ship It!"
+    merge_conditions:
+      - status-success=macos-14 - C++ Benchmark
+      - status-success=macos-14 - test run
+      - status-success=ubuntu-24.04 - C++ Benchmark
+      - status-success=ubuntu-24.04 - without libclang completer - test run
+      - status-success=ubuntu-24.04 - with Clang compiler - test run
+      - status-success=ubuntu-24.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 17 x64 - test run
+      - status-success=Windows MSVC 17 x86 - test run
+      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+    merge_method: merge
+  - name: duplicated default from Manual merge on Pipelines and Maintainer Override
+      from owner PR
+    queue_conditions:
+      - base=master
+      - author=puremourning
+      - status-success=macos-14 - C++ Benchmark
+      - status-success=macos-14 - test run
+      - status-success=ubuntu-24.04 - C++ Benchmark
+      - status-success=ubuntu-24.04 - without libclang completer - test run
+      - status-success=ubuntu-24.04 - with Clang compiler - test run
+      - status-success=ubuntu-24.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 17 x64 - test run
+      - status-success=Windows MSVC 17 x86 - test run
+      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+      - "#changes-requested-reviews-by=0"
+      - label="Ship It!"
+    merge_conditions:
+      - status-success=macos-14 - C++ Benchmark
+      - status-success=macos-14 - test run
+      - status-success=ubuntu-24.04 - C++ Benchmark
+      - status-success=ubuntu-24.04 - without libclang completer - test run
+      - status-success=ubuntu-24.04 - with Clang compiler - test run
+      - status-success=ubuntu-24.04 - test run
+      - status-success=C++ Lint
+      - status-success=Windows MSVC 16 x64 - test run
+      - status-success=Windows MSVC 17 x64 - test run
+      - status-success=Windows MSVC 17 x86 - test run
+      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+    merge_method: merge
 
 pull_request_rules:
   - name: Automatic merge on Azure Pipelines and Reviewable successes
@@ -33,9 +110,6 @@ pull_request_rules:
       - status-success=Windows MSVC 17 x64 - C++ Benchmark
       - status-success=code-review/reviewable
     actions:
-      queue:
-        method: merge
-        name: default
       comment:
         message: Thanks for sending a PR!
 
@@ -59,9 +133,6 @@ pull_request_rules:
 
       - label="Ship It!"
     actions:
-      queue:
-        method: merge
-        name: default
       comment:
         message: Thanks for sending a PR!
 
@@ -84,8 +155,11 @@ pull_request_rules:
       - "#changes-requested-reviews-by=0"
       - label="Ship It!"
     actions:
-      queue:
-        method: merge
-        name: default
       comment:
         message: Thanks for sending a PR!
+  - name: Automatic merge on Azure Pipelines and Reviewable successes + Manual merge
+      on Azure Pipelines and Maintainer Override + Manual merge on Pipelines and Maintainer
+      Override from owner PR
+    conditions: []
+    actions:
+      queue:
