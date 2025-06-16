@@ -41,7 +41,6 @@ def setUpModule():
 
 
 def tearDownModule():
-  global shared_app
   StopCompleterServer( shared_app, 'rust' )
 
 
@@ -86,8 +85,6 @@ def PollForMessages( app, request_data, timeout = 60 ):
 
 
 def SharedYcmd( test ):
-  global shared_app
-
   @functools.wraps( test )
   def Wrapper( test_case_instance, *args, **kwargs ):
     ClearCompletionsCache()
