@@ -328,6 +328,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def DefaultSettings( self, request_data ):
     return {
       'bundles': self._bundles,
+      'extendedClientCapabilities': {
+        'classFileContentsSupport': True
+      }
 
       # This disables re-checking every open file on every change to every file.
       # But can lead to stale diagnostics. Unfortunately, this can be kind of
