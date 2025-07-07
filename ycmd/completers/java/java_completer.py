@@ -328,6 +328,9 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
   def DefaultSettings( self, request_data ):
     return {
       'bundles': self._bundles,
+      'capabilities': {
+        'definitionProvider': True
+      },
       'extendedClientCapabilities': {
         'classFileContentsSupport': True
       }
