@@ -26,7 +26,6 @@ from ycmd.utils import ( ByteOffsetToCodepointOffset,
                          ToBytes,
                          ToUnicode,
                          UpdateDict )
-from ycmd.responses import IsJdtContentUri
 
 
 Error = collections.namedtuple( 'RequestError', [ 'code', 'reason' ] )
@@ -643,12 +642,6 @@ def Position( line_num, line_value, column_codepoint ):
   }
 
 
-def ClassFileContents( request_id, request_data ):
-  return BuildRequest( request_id, 'java/classFileContents', {
-    'uri': request_data[ 'uri' ]
-  } )
-
-
 def PrepareHierarchy( request_id, request_data, kind ):
   return BuildRequest( request_id, f'textDocument/prepare{ kind }Hierarchy', {
     'textDocument': {
@@ -760,16 +753,10 @@ def InlayHints( request_id, request_data ):
 
 
 def FilePathToUri( file_name ):
-  if IsJdtContentUri( file_name ):
-    return file_name
-
   return urljoin( 'file:', pathname2url( file_name ) )
 
 
 def UriToFilePath( uri ):
-  if IsJdtContentUri( uri ):
-    return uri
-
   parsed_uri = urlparse( uri )
   if parsed_uri.scheme != 'file':
     raise InvalidUriException( uri )

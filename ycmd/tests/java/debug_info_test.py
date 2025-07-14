@@ -150,7 +150,6 @@ class DebugInfoTest( TestCase ):
 
     request_data = BuildRequest( filepath = filepath,
                                  filetype = 'java' )
-
     assert_that(
       app.post_json( '/debug_info', request_data ).json,
       has_entry( 'completer', has_entries( {

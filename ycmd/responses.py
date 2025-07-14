@@ -173,24 +173,13 @@ def BuildInlayHintsResponse( inlay_hints, errors = None ):
   }
 
 
-def IsJdtContentUri( uri ):
-  return isinstance( uri, str ) and uri[ : 5 ] == "jdt:/"
-
-
 # location.column_number_ is a byte offset
 def BuildLocationData( location ):
-  filename = ''
-
-  if IsJdtContentUri( filename ):
-    filename = location.filename_
-
-  if location.filename_:
-    filename = os.path.normpath( location.filename_ )
-
   return {
     'line_num': location.line_number_,
     'column_num': location.column_number_,
-    'filepath': filename,
+    'filepath': ( os.path.normpath( location.filename_ )
+                  if location.filename_ else '' ),
   }
 
 
@@ -234,10 +223,7 @@ class Location:
     self.line_number_ = line
     self.column_number_ = column
     if filename:
-      if IsJdtContentUri( filename ):
-        self.filename_ = filename
-      else:
-        self.filename_ = os.path.abspath( filename )
+      self.filename_ = os.path.abspath( filename )
     else:
       # When the filename passed (e.g. by a server) can't be recognized or
       # parsed, we send an empty filename. This at least allows the client to

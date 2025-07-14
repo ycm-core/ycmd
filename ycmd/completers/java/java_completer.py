@@ -25,7 +25,9 @@ import threading
 from collections import OrderedDict
 
 from ycmd import responses, utils
-from ycmd.completers.language_server import language_server_completer
+from ycmd.completers.java import java_utils
+from ycmd.completers.language_server import ( language_server_protocol as lsp,
+                                             language_server_completer )
 from ycmd.utils import LOGGER
 
 NO_DOCUMENTATION_MESSAGE = 'No documentation available for current context'
@@ -666,3 +668,79 @@ class JavaCompleter( language_server_completer.LanguageServerCompleter ):
           *language_server_completer._LspLocationToLocationAndDescription(
             request_data, item[ 'from' ] ) )
     return result
+
+
+  def GoTo( self, request_data, handlers ):
+    """Issues a GoTo request for each handler in |handlers| until it returns
+    multiple locations or a location the cursor does not belong since the user
+    wants to jump somewhere else. If that's the last handler, the location is
+    returned anyway."""
+    if not self.ServerIsReady():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    self._UpdateServerWithFileContents( request_data )
+
+    # flake8 doesn't like long lines so we have to split it up
+    def HandlerCondition( result, request_data ):
+      return result and \
+             not language_server_completer._CursorInsideLocation( request_data,
+                                                           result[ 0 ] )
+
+    result = []
+    for handler in handlers:
+      new_result = self._GoToRequest( request_data, handler )
+      if new_result:
+        result = new_result
+      if len( result ) > 1 or HandlerCondition( result, request_data ):
+        break
+
+    if not result:
+      raise RuntimeError( 'Cannot jump to location' )
+
+    first_result = result[ 0 ]
+    if java_utils.IsJdtContentUri( first_result[ 'uri' ] ):
+      contents = self.GetClassFileContents( first_result )
+      response = first_result.copy()
+      response[ 'jdt_contents' ] = str( contents )
+
+      return response
+
+    return language_server_completer._LocationListToGoTo( request_data, result )
+
+
+  def GoToSymbol( self, request_data, args ):
+    result = super().GoToSymbol( request_data, args )
+
+    def locations_filter( filepath ):
+      return filepath and not java_utils.IsJdtContentUri( filepath )
+
+    if isinstance( result, list ):
+      result = sorted(
+          filter( lambda loc: locations_filter( loc[ 'filepath' ] ), result ),
+          key = lambda s: ( s[ 'extra_data' ][ 'kind' ],
+                            s[ 'extra_data' ][ 'name' ] )
+      )
+
+    return result
+
+
+  def GetClassFileContents( self, request_data ):
+    """Retrieves the contents of a Java class file from the language server
+    using the provided request data, ensuring the server is initialized before
+    proceeding; raises a RuntimeError if the server is not ready, sends a
+    request to obtain the class file contents, and returns the result if
+    available."""
+    if not self._ServerIsInitialized():
+      raise RuntimeError( 'Server is initializing. Please wait.' )
+
+    request_id = self.GetConnection().NextRequestId()
+    response = self.GetConnection().GetResponse(
+      request_id,
+      lsp.BuildRequest( request_id, 'java/classFileContents', {
+        'uri': request_data[ 'uri' ]
+      } ),
+      language_server_completer.REQUEST_TIMEOUT_COMMAND )
+
+    result = response[ 'result' ]
+    if result:
+      return result

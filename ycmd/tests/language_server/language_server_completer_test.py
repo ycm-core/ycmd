@@ -47,7 +47,8 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     RangeMatcher )
 from ycmd.tests.language_server import IsolatedYcmd, PathToTestFile
 from ycmd import handlers, utils, responses
-from ycmd.responses import IsJdtContentUri
+from ycmd.completers.java.java_utils import IsJdtContentUri
+from ycmd.completers.java.java_completer import JavaCompleter
 import os
 
 MESSAGE_INITIALIZING = 'Server is initializing. Please wait.'
@@ -91,6 +92,15 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
 
   def GetServerName( self ):
     return 'mock_completer'
+
+
+class MockJavaCompleter( MockCompleter, JavaCompleter ):
+  def Language( self ):
+    return 'java'
+
+
+  def GetServerName( self ):
+    return 'mock_java_completer'
 
 
 def _TupleToLSPRange( tuple ):
@@ -369,6 +379,66 @@ class LanguageServerCompleterTest( TestCase ):
 
 
   @IsolatedYcmd()
+  def test_LanguageJavaServerCompleter_GoTo( self, app ):
+    completer = MockJavaCompleter()
+    completer._server_capabilities = {
+      'definitionProvider':     True,
+      'declarationProvider':    True,
+      'typeDefinitionProvider': True,
+      'implementationProvider': True,
+      'referencesProvider':     True
+    }
+
+    if utils.OnWindows():
+      filepath = 'C:\\test.test'
+    else:
+      filepath = '/test.test'
+
+    contents = 'line1\nline2\nline3'
+
+    request_data = RequestWrap( BuildRequest(
+      filetype = 'ycmtest',
+      filepath = filepath,
+      contents = contents,
+      line_num = 2,
+      column_num = 3
+    ) )
+
+    jdt_response = {
+      'uri': 'jdt://contents/stuff/Member.class',
+      'jdt_contents': 'mock contents',
+      'range': {
+        'start': { 'line': 0, 'character': 0 },
+        'end': { 'line': 0, 'character': 0 },
+      }
+    }
+
+    @patch.object( completer, 'ServerIsReady', return_value = True )
+    def Test( responses, command, exception, throws, *args ):
+      with patch.object( completer.GetConnection(),
+                         'GetResponse',
+                         side_effect = responses ):
+        if throws:
+          assert_that(
+            calling( completer.OnUserCommand ).with_args( [ command ],
+                                                          request_data ),
+            raises( exception )
+          )
+        else:
+          result = completer.OnUserCommand( [ command ], request_data )
+          assert_that( result, exception )
+
+
+    with patch(
+      'ycmd.completers.java.java_completer.'
+      'JavaCompleter.GetClassFileContents',
+      return_value = 'mock contents' ):
+      Test( [ {
+        'result': jdt_response
+      } ], 'GoTo', equal_to( jdt_response ), False )
+
+
+  @IsolatedYcmd()
   def test_LanguageServerCompleter_GoTo( self, app ):
     if utils.OnWindows():
       filepath = 'C:\\test.test'
@@ -421,15 +491,6 @@ class LanguageServerCompleterTest( TestCase ):
       }
     }
 
-    jdt_response = {
-      'uri': 'jdt://contents/stuff/Member.class',
-      'jdt_contents': 'mock contents',
-      'range': {
-        'start': { 'line': 0, 'character': 0 },
-        'end': { 'line': 0, 'character': 0 },
-      }
-    }
-
     goto_response = has_entries( {
       'filepath': filepath,
       'column_num': 1,
@@ -453,13 +514,6 @@ class LanguageServerCompleterTest( TestCase ):
     for response, goto_handlers, exception, throws in cases:
       Test( response, goto_handlers, exception, throws )
 
-    with patch(
-      'ycmd.completers.language_server.language_server_completer.'
-      'LanguageServerCompleter.GetClassFileContents',
-      return_value = 'mock contents' ):
-      Test( [ {
-        'result': jdt_response
-      } ], 'GoTo', equal_to( jdt_response ), False )
 
     # All requests return an invalid URI.
     with patch(
@@ -1599,7 +1653,7 @@ class LanguageServerCompleterTest( TestCase ):
 
   @IsolatedYcmd()
   def test_LanguageServerCompleter_GetClassFileContents_Success( self, app ):
-    completer = MockCompleter()
+    completer = MockJavaCompleter()
 
     with patch.object( completer, '_ServerIsInitialized', return_value = True ):
       with patch.object( completer.GetConnection(), 'GetResponse',
@@ -1614,7 +1668,7 @@ class LanguageServerCompleterTest( TestCase ):
 
   @IsolatedYcmd()
   def test_LanguageServerCompleter_GetClassFileContents_Uninit( self, *args ):
-    completer = MockCompleter()
+    completer = MockJavaCompleter()
 
     with self.assertRaises( RuntimeError ) as context:
       completer.GetClassFileContents( {} )

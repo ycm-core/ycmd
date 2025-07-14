@@ -2618,15 +2618,6 @@ class LanguageServerCompleter( Completer ):
 
     if not result:
       raise RuntimeError( 'Cannot jump to location' )
-
-    first_result = result[ 0 ]
-    if responses.IsJdtContentUri( first_result[ 'uri' ] ):
-      contents = self.GetClassFileContents( first_result )
-      response = first_result.copy()
-      response[ 'jdt_contents' ] = str( contents )
-
-      return response
-
     return _LocationListToGoTo( request_data, result )
 
 
@@ -2670,26 +2661,6 @@ class LanguageServerCompleter( Completer ):
       result = _FlattenDocumentSymbolHierarchy( result )
 
     return _LspSymbolListToGoTo( request_data, result )
-
-
-  def GetClassFileContents( self, request_data ):
-    """Retrieves the contents of a Java class file from the language server
-    using the provided request data, ensuring the server is initialized before
-    proceeding; raises a RuntimeError if the server is not ready, sends a
-    request to obtain the class file contents, and returns the result if
-    available."""
-    if not self._ServerIsInitialized():
-      raise RuntimeError( 'Server is initializing. Please wait.' )
-
-    request_id = self.GetConnection().NextRequestId()
-    response = self.GetConnection().GetResponse(
-      request_id,
-      lsp.ClassFileContents( request_id, request_data ),
-      REQUEST_TIMEOUT_COMMAND )
-
-    result = response[ 'result' ]
-    if result:
-      return result
 
 
   def InitialHierarchy( self, request_data, args ):
@@ -3438,9 +3409,6 @@ def _LspSymbolListToGoTo( request_data, symbols ):
   locations = [ _BuildGoToLocationFromSymbol( s, request_data ) for s in
                 sorted( symbols,
                         key = lambda s: ( s[ 'kind' ], s[ 'name' ] ) ) ]
-
-  locations = [ location for location in locations
-                if not responses.IsJdtContentUri( location[ 'filepath' ] ) ]
 
   if not locations:
     raise RuntimeError( "Symbol not found" )
