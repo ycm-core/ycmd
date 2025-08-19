@@ -115,7 +115,11 @@ def CompleterType( value ):
 
 
 def ParseArguments():
-  parser = argparse.ArgumentParser()
+  description = '''
+    Unknown arguments are passed to unittest module, e.g. to select test cases.
+    See `python -m unittest --help` for more details.
+  '''
+  parser = argparse.ArgumentParser( description=description )
   group = parser.add_mutually_exclusive_group()
   group.add_argument( '--no-clang-completer', action = 'store_true',
                        help = argparse.SUPPRESS ) # deprecated
