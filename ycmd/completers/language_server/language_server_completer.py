@@ -342,7 +342,7 @@ class LanguageServerConnection( threading.Thread ):
     self._stop_event = threading.Event()
     self._notification_handler = notification_handler
 
-    self._collector = RejectCollector()
+    self._collector = UnsolicitedEditApplier()
     self._observers = []
 
 
@@ -2154,6 +2154,23 @@ class LanguageServerCompleter( Completer ):
                   'Server reported: %s',
                   params[ 'message' ] )
 
+
+    # HACK: Not really a notification; we pretend it is because we send it
+    # (unsolicited) to our clients and pretend to the server that it was applied
+    # anyway.
+    if notification[ 'method' ] == 'workspace/applyEdit':
+      LOGGER.info( "Server requested to apply edit: %s",
+                   notification )
+      fixit = WorkspaceEditToFixIt(
+        request_data,
+        notification[ 'params' ][ 'edit' ],
+        notification[ 'params' ].get( 'label' ) or None )
+
+      if fixit:
+        response = responses.BuildFixItResponse( [ fixit ] )
+        LOGGER.info( "Response resulting: %s", response )
+        return response
+
     return None
 
 
@@ -3630,10 +3647,39 @@ def WorkspaceEditToFixIt( request_data,
                                        workspace_edit[ 'changes' ][ uri ] ) )
   else:
     chunks = []
-    for text_document_edit in workspace_edit[ 'documentChanges' ]:
-      uri = text_document_edit[ 'textDocument' ][ 'uri' ]
-      edits = text_document_edit[ 'edits' ]
-      chunks.extend( TextEditToChunks( request_data, uri, edits ) )
+    for document_change in workspace_edit[ 'documentChanges' ]:
+      if 'kind' in document_change:
+        # File operation
+        try:
+          if document_change[ 'kind' ] == 'create':
+            chunks.append( responses.FixItResourceOp( {
+              'op': 'create',
+              'uri': lsp.UriToFilePath( document_change[ 'uri' ] ),
+              'options': document_change.get( 'options', {} ),
+            } ) )
+          elif document_change[ 'kind' ] == 'rename':
+            chunks.append( responses.FixItResourceOp( {
+              'op': 'rename',
+              'old_filepath': lsp.UriToFilePath( document_change[ 'oldUri' ] ),
+              'new_filepath': lsp.UriToFilePath( document_change[ 'newUri' ] ),
+              'options': document_change.get( 'options', {} ),
+            } ) )
+          elif document_change[ 'kind' ] == 'delete':
+            chunks.append( responses.FixItResourceOp( {
+              'op': 'delete',
+              'uri': lsp.UriToFilePath( document_change[ 'uri' ] ),
+              'options': document_change.get( 'options', {} ),
+            } ) )
+        except lsp.InvalidUriException:
+          LOGGER.debug( 'Invalid filepath received in TextEdit create' )
+          continue
+      else:
+        # Text document edit
+        chunks.extend(
+          TextEditToChunks( request_data,
+                            document_change[ 'textDocument' ][ 'uri' ],
+                            document_change[ 'edits' ] ) )
+
   return responses.FixIt(
     responses.Location( request_data[ 'line_num' ],
                         request_data[ 'column_num' ],
@@ -3687,6 +3733,14 @@ class LanguageServerCompletionsCache( CompletionsCache ):
 class RejectCollector:
   def CollectApplyEdit( self, request, connection ):
     connection.SendResponse( lsp.ApplyEditResponse( request, False ) )
+
+
+class UnsolicitedEditApplier:
+  def CollectApplyEdit( self, request, connection: LanguageServerConnection ):
+    # Pretend this event is a notification and let the LSP implenentation handle
+    # it. This is a hack to forward these requests to the client.
+    connection._AddNotificationToQueue( request )
+    connection.SendResponse( lsp.ApplyEditResponse( request, True ) )
 
 
 class EditCollector:

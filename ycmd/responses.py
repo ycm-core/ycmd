@@ -278,6 +278,25 @@ class FixItChunk:
     self.replacement_text = replacement_text
     self.range = range
 
+  def ToResponse( self ):
+    return {
+      'replacement_text': self.replacement_text,
+      'range': BuildRangeData( self.range ),
+    }
+
+
+class FixItResourceOp:
+  """A resource operation to be performed by a FixIt (aka Refactor)"""
+
+  def __init__( self, resource_op ):
+    """kind of type string, path of type string"""
+    self.resource_op = resource_op
+
+  def ToResponse( self ):
+    return {
+      'resource_op': self.resource_op,
+    }
+
 
 def BuildDiagnosticData( diagnostic ):
   kind = ( diagnostic.kind_.name if hasattr( diagnostic.kind_, 'name' )
@@ -326,10 +345,7 @@ def BuildFixItResponse( fixits ):
   both quick fix and refactor operations"""
 
   def BuildFixitChunkData( chunk ):
-    return {
-      'replacement_text': chunk.replacement_text,
-      'range': BuildRangeData( chunk.range ),
-    }
+    return chunk.ToResponse()
 
   def BuildFixItData( fixit ):
     if hasattr( fixit, 'resolve' ):
