@@ -21,32 +21,33 @@
 #include <clang-c/Index.h>
 #include <string>
 
+#include <pymetabind/utils.hpp>
 
 namespace YouCompleteMe {
 
 /// This class holds information useful for generating a documentation response
 /// for a given cursor
-struct DocumentationData {
+struct [[=pymetabind::utils::make_binding()]] DocumentationData {
   /// Construct an empty object
   DocumentationData() = default;
 
   /// Construct and extract information from the supplied cursor. The cursor
   /// should be pointing to a canonical declaration, such as returned by
   /// clang_getCanonicalCursor( clang_getCursorReferenced( cursor ) )
-  explicit DocumentationData( const CXCursor &cursor );
+  [[=pymetabind::utils::skip_member()]] explicit DocumentationData( const CXCursor &cursor );
 
   /// XML data as parsed by libclang. This provides full semantic parsing of
   /// doxygen-syntax comments.
-  std::string comment_xml;
+  [[=pymetabind::utils::readonly()]] std::string comment_xml;
 
   /// The raw text of the comment preceding the declaration
-  std::string raw_comment;
+  [[=pymetabind::utils::readonly()]] std::string raw_comment;
   /// The brief comment (either first paragraph or \brief) as parsed by libclang
-  std::string brief_comment;
+  [[=pymetabind::utils::readonly()]] std::string brief_comment;
   /// The canonical type of the referenced cursor
-  std::string canonical_type;
+  [[=pymetabind::utils::readonly()]] std::string canonical_type;
   /// The display name of the referenced cursor
-  std::string display_name;
+  [[=pymetabind::utils::readonly()]] std::string display_name;
 
   bool operator == ( const DocumentationData &other ) const {
     return comment_xml == other.comment_xml &&

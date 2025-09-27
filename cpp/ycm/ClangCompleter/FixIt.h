@@ -24,17 +24,19 @@
 #include <string>
 #include <vector>
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
 /// Information about a replacement that can be made to the source to "fix" a
 /// diagnostic.
-struct FixItChunk {
+struct [[=pymetabind::utils::make_binding(), =pymetabind::utils::make_vector()]] FixItChunk {
   /// The replacement string. This string should replace the source range
   /// represented by 'range'.
-  std::string replacement_text;
+  [[=pymetabind::utils::readonly()]] std::string replacement_text;
 
   /// The range within the file to replace with replacement_text.
-  Range range;
+  [[=pymetabind::utils::readonly()]] Range range;
 
 };
 
@@ -43,15 +45,15 @@ struct FixItChunk {
 /// diagnostic. This structure forms the reply to the "FixIt" subcommand, and
 /// represents a lightweight view of a diagnostic. The location is included to
 /// aid clients in applying the most appropriate FixIt based on context.
-struct FixIt {
-  std::vector< FixItChunk > chunks;
+struct [[=pymetabind::utils::make_binding(), =pymetabind::utils::make_vector()]] FixIt {
+  [[=pymetabind::utils::readonly()]] std::vector< FixItChunk > chunks;
 
-  Location location;
+  [[=pymetabind::utils::readonly()]] Location location;
 
   /// This is the text of the diagnostic. This is useful when there are
   /// multiple diagnostics offering different fixit options. The text is
   /// displayed to the user, allowing them choose which diagnostic to apply.
-  std::string text;
+  [[=pymetabind::utils::readonly()]] std::string text;
 };
 
 } // namespace YouCompleteMe

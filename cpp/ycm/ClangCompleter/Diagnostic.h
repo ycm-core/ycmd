@@ -20,34 +20,36 @@
 
 #include "FixIt.h"
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
-enum class DiagnosticKind {
+enum class [[=pymetabind::utils::make_binding()]] DiagnosticKind {
   INFORMATION = 0,
   ERROR,
   WARNING
 };
 
 
-struct Diagnostic {
+struct [[=pymetabind::utils::make_binding(), =pymetabind::utils::make_vector()]] Diagnostic {
 
-  Location location_;
+  [[=pymetabind::utils::readonly()]] Location location_;
 
-  Range location_extent_;
+  [[=pymetabind::utils::readonly()]] Range location_extent_;
 
-  std::vector< Range > ranges_;
+  [[=pymetabind::utils::readonly()]] std::vector< Range > ranges_;
 
-  DiagnosticKind kind_;
+  [[=pymetabind::utils::readonly()]] DiagnosticKind kind_;
 
-  std::string text_;
+  [[=pymetabind::utils::readonly()]] std::string text_;
 
-  std::string long_formatted_text_;
+  [[=pymetabind::utils::readonly()]] std::string long_formatted_text_;
 
   /// The (cached) changes required to fix this diagnostic.
   /// Note: when there are child diagnostics, there may be multiple possible
   /// FixIts for the main reported diagnostic. These are typically notes,
   /// offering alternative ways to fix the error.
-  std::vector< FixIt > fixits_;
+  [[=pymetabind::utils::readonly()]] std::vector< FixIt > fixits_;
 };
 
 } // namespace YouCompleteMe

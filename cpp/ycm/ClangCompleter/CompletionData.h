@@ -20,9 +20,11 @@
 
 #include "FixIt.h"
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
-enum class CompletionKind {
+enum class [[=pymetabind::utils::make_binding()]] CompletionKind {
   STRUCT = 0,
   CLASS,
   ENUM,
@@ -48,9 +50,9 @@ enum class CompletionKind {
 //
 // The user can also enable a "preview" window that will show extra information
 // about a completion at the top of the buffer.
-struct CompletionData {
+struct [[=pymetabind::utils::make_binding(), =pymetabind::utils::make_vector()]] CompletionData {
   CompletionData() = default;
-  CompletionData( CXCompletionString completion_string,
+  [[=pymetabind::utils::skip_member()]] CompletionData( CXCompletionString completion_string,
                   CXCursorKind kind,
                   CXCodeCompleteResults *results,
                   size_t index );
@@ -89,23 +91,23 @@ struct CompletionData {
     return doc_string_;
   }
 
-  std::string detailed_info_;
+  [[=pymetabind::utils::skip_member()]] std::string detailed_info_;
 
-  std::string return_type_;
+  [[=pymetabind::utils::skip_member()]] std::string return_type_;
 
-  CompletionKind kind_;
+  [[=pymetabind::utils::readonly()]] CompletionKind kind_;
 
   // The original, raw completion string. For a function like "int foo(int x)",
   // the original string is "foo". For a member data variable like "foo_", this
   // is just "foo_". This corresponds to clang's TypedText chunk of the
   // completion string.
-  std::string original_string_;
+  [[=pymetabind::utils::skip_member()]] std::string original_string_;
 
-  std::string everything_except_return_type_;
+  [[=pymetabind::utils::skip_member()]] std::string everything_except_return_type_;
 
-  std::string doc_string_;
+  [[=pymetabind::utils::skip_member()]] std::string doc_string_;
 
-  FixIt fixit_;
+  [[=pymetabind::utils::readonly()]] FixIt fixit_;
 
 private:
 

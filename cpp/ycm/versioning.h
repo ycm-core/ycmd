@@ -24,9 +24,11 @@
 #define YCMD_CORE_VERSION 0
 #endif
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
-int YcmCoreVersion();
+[[=pymetabind::utils::make_binding()]] int YcmCoreVersion();
 
 }  // namespace YouCompleteMe
 

@@ -20,7 +20,9 @@
 
 #include <string>
 
-struct UnsavedFile {
+#include <pymetabind/utils.hpp>
+
+struct [[=pymetabind::utils::make_binding(), =pymetabind::utils::make_vector<std::string("CompletionVector")>()]] UnsavedFile {
   UnsavedFile() = default;
 
   std::string filename_;

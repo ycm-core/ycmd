@@ -23,13 +23,15 @@
 #include <clang-c/Index.h>
 #include <string>
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
-struct Location {
+struct [[=pymetabind::utils::make_binding()]] Location {
   // Creates an invalid location
   Location() = default;
 
-  Location( const std::string &filename,
+  [[=pymetabind::utils::skip_member()]] Location( const std::string &filename,
             unsigned int line,
             unsigned int column )
     : line_number_( line ),
@@ -37,7 +39,7 @@ struct Location {
       filename_( filename ) {
   }
 
-  explicit Location( const CXSourceLocation &location ) {
+  [[=pymetabind::utils::skip_member()]] explicit Location( const CXSourceLocation &location ) {
     CXFile file;
     unsigned int unused_offset;
     clang_getExpansionLocation( location,
@@ -58,11 +60,11 @@ struct Location {
     return !filename_.empty();
   }
 
-  unsigned int line_number_{ 0 };
-  unsigned int column_number_{ 0 };
+  [[=pymetabind::utils::readonly()]] unsigned int line_number_{ 0 };
+  [[=pymetabind::utils::readonly()]] unsigned int column_number_{ 0 };
 
   // The full, absolute path
-  std::string filename_;
+  [[=pymetabind::utils::readonly()]] std::string filename_;
 };
 
 } // namespace YouCompleteMe

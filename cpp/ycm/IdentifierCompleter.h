@@ -23,47 +23,48 @@
 #include <string>
 #include <vector>
 
+#include <pymetabind/utils.hpp>
 
 namespace YouCompleteMe {
 
 class Candidate;
 
 
-class IdentifierCompleter {
+class [[=pymetabind::utils::make_binding()]] IdentifierCompleter {
 public:
 
   IdentifierCompleter( const IdentifierCompleter& ) = delete;
   IdentifierCompleter& operator=( const IdentifierCompleter& ) = delete;
 
   YCM_EXPORT IdentifierCompleter() = default;
-  YCM_EXPORT explicit IdentifierCompleter(
+  [[=pymetabind::utils::skip_member()]] YCM_EXPORT explicit IdentifierCompleter(
     std::vector< std::string > candidates );
-  YCM_EXPORT IdentifierCompleter(
+  [[=pymetabind::utils::skip_member()]] YCM_EXPORT IdentifierCompleter(
                        std::vector< std::string >&& candidates,
                        std::string&& filetype,
                        std::string&& filepath );
 
-  void AddSingleIdentifierToDatabase(
+  [[=pymetabind::utils::gil_release()]] void AddSingleIdentifierToDatabase(
     std::string& new_candidate,
     std::string& filetype,
     std::string& filepath );
 
   // Same as above, but clears all identifiers stored for the file before adding
   // new identifiers.
-  void ClearForFileAndAddIdentifiersToDatabase(
+  [[=pymetabind::utils::gil_release()]] void ClearForFileAndAddIdentifiersToDatabase(
     std::vector< std::string >& new_candidates,
     std::string& filetype,
     std::string& filepath );
 
-  YCM_EXPORT void AddIdentifiersToDatabaseFromTagFiles(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT void AddIdentifiersToDatabaseFromTagFiles(
     std::vector< std::string >& absolute_paths_to_tag_files );
 
   // Only provided for tests!
-  YCM_EXPORT std::vector< std::string > CandidatesForQuery(
+  [[=pymetabind::utils::skip_member()]] YCM_EXPORT std::vector< std::string > CandidatesForQuery(
     std::string&& query,
     const size_t max_candidates = 0 ) const;
 
-  YCM_EXPORT std::vector< std::string > CandidatesForQueryAndType(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT std::vector< std::string > CandidatesForQueryAndType(
     std::string& query,
     const std::string &filetype,
     const size_t max_candidates = 0 ) const;

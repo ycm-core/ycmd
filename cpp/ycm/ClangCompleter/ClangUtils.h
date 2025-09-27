@@ -22,6 +22,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
 /**
@@ -36,14 +38,14 @@ bool CursorIsValid( CXCursor cursor );
 
 std::string CXFileToFilepath( CXFile file );
 
-std::string ClangVersion();
+[[=pymetabind::utils::make_binding()]] std::string ClangVersion();
 
 const char *CXErrorCodeToString( CXErrorCode code );
 
 /**
  * Thrown when libclang fails to parse (or reparse) the translation unit.
  */
-struct YCM_EXPORT ClangParseError : std::runtime_error {
+struct YCM_EXPORT [[=pymetabind::utils::make_exception()]] ClangParseError : std::runtime_error {
   explicit ClangParseError( const char *what_arg );
   explicit ClangParseError( CXErrorCode code );
 };

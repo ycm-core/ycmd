@@ -19,21 +19,24 @@
 #define COMPILATIONDATABASE_H_ZT7MQXPG
 
 #include <clang-c/CXCompilationDatabase.h>
+#include <memory>
 #include <mutex>
 #include <pybind11/pybind11.h>
 #include <string>
 #include <vector>
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
-struct CompilationInfoForFile {
-  std::vector< std::string > compiler_flags_;
-  std::string compiler_working_dir_;
+struct [[=pymetabind::utils::make_binding(), =pymetabind::utils::holder_type(^^std::shared_ptr)]] CompilationInfoForFile {
+  [[=pymetabind::utils::readonly()]] std::vector< std::string > compiler_flags_;
+  [[=pymetabind::utils::readonly()]] std::string compiler_working_dir_;
 };
 
 
 // Access to Clang's internal CompilationDatabase. This class is thread-safe.
-class CompilationDatabase {
+class [[=pymetabind::utils::make_binding()]] CompilationDatabase {
 public:
   // |path_to_directory| should be a string-like object.
   explicit CompilationDatabase( pybind11::object path_to_directory );

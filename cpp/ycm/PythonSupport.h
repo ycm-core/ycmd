@@ -19,6 +19,7 @@
 #define PYTHONSUPPORT_H_KWGFEX0V
 
 #include <pybind11/pybind11.h>
+#include <pymetabind/utils.hpp>
 
 namespace YouCompleteMe {
 
@@ -28,7 +29,7 @@ namespace YouCompleteMe {
 /// original objects that survived the filtering. This list contains at most
 /// |max_candidates|. If |max_candidates| is omitted or 0, all candidates are
 /// sorted.
-YCM_EXPORT pybind11::list FilterAndSortCandidates(
+[[=pymetabind::utils::make_binding()]] YCM_EXPORT pybind11::list FilterAndSortCandidates(
   const pybind11::list& candidates,
   pybind11::str candidate_property,
   std::string& query,

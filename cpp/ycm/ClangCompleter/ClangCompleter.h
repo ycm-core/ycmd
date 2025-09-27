@@ -25,6 +25,8 @@
 
 #include <string>
 
+#include <pymetabind/utils.hpp>
+
 using CXTranslationUnit = CXTranslationUnitImpl*;
 
 namespace YouCompleteMe {
@@ -37,21 +39,21 @@ using CompletionDatas = std::vector< CompletionData >;
 
 
 // All filename parameters must be absolute paths.
-class ClangCompleter {
+class [[=pymetabind::utils::make_binding()]] ClangCompleter {
 public:
   YCM_EXPORT ClangCompleter();
   YCM_EXPORT ~ClangCompleter();
   ClangCompleter( const ClangCompleter& ) = delete;
   ClangCompleter& operator=( const ClangCompleter& ) = delete;
 
-  bool UpdatingTranslationUnit( const std::string &filename );
+  [[=pymetabind::utils::gil_release()]] bool UpdatingTranslationUnit( const std::string &filename );
 
-  YCM_EXPORT std::vector< Diagnostic > UpdateTranslationUnit(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT std::vector< Diagnostic > UpdateTranslationUnit(
     const std::string &translation_unit,
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags );
 
-  YCM_EXPORT std::vector< CompletionData > CandidatesForLocationInFile(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT std::vector< CompletionData > CandidatesForLocationInFile(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -59,7 +61,7 @@ public:
     const std::vector< UnsavedFile > &unsaved_files,
     const std::vector< std::string > &flags );
 
-  YCM_EXPORT Location GetDeclarationLocation(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT Location GetDeclarationLocation(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -68,7 +70,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  YCM_EXPORT Location GetDefinitionLocation(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT Location GetDefinitionLocation(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -77,7 +79,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  YCM_EXPORT Location GetDefinitionOrDeclarationLocation(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT Location GetDefinitionOrDeclarationLocation(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -86,7 +88,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  YCM_EXPORT std::string GetTypeAtLocation(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT std::string GetTypeAtLocation(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -95,7 +97,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  YCM_EXPORT std::string GetEnclosingFunctionAtLocation(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT std::string GetEnclosingFunctionAtLocation(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -104,7 +106,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  YCM_EXPORT std::vector< FixIt > GetFixItsForLocationInFile(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT std::vector< FixIt > GetFixItsForLocationInFile(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -113,7 +115,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  YCM_EXPORT DocumentationData GetDocsForLocationInFile(
+  [[=pymetabind::utils::gil_release()]] YCM_EXPORT DocumentationData GetDocsForLocationInFile(
     const std::string &translation_unit,
     const std::string &filename,
     int line,
@@ -122,7 +124,7 @@ public:
     const std::vector< std::string > &flags,
     bool reparse = true );
 
-  void DeleteCachesForFile( const std::string &filename );
+  [[=pymetabind::utils::gil_release()]] void DeleteCachesForFile( const std::string &filename );
 
 private:
 

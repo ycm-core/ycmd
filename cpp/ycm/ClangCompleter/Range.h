@@ -20,21 +20,23 @@
 
 #include "Location.h"
 
+#include <pymetabind/utils.hpp>
+
 namespace YouCompleteMe {
 
 // Half-open, [start, end>
-struct Range {
+struct [[=pymetabind::utils::make_binding(), =pymetabind::utils::make_vector()]] Range {
   Range() = default;
 
-  Range( const Location &start_location, const Location &end_location )
+  [[=pymetabind::utils::skip_member()]] Range( const Location &start_location, const Location &end_location )
     : start_( start_location ),
       end_( end_location ) {
   }
 
-  explicit Range( const CXSourceRange &range );
+  [[=pymetabind::utils::skip_member()]] explicit Range( const CXSourceRange &range );
 
-  Location start_;
-  Location end_;
+  [[=pymetabind::utils::readonly()]] Location start_;
+  [[=pymetabind::utils::readonly()]] Location end_;
 };
 
 } // namespace YouCompleteMe
