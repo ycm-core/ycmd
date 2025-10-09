@@ -217,7 +217,9 @@ class SubcommandsTest( TestCase ):
                                       'FixIt',
                                       'CallHierarchy',
                                       'ResolveCallHierarchyItem',
+                                      'ResolveTypeHierarchyItem',
                                       'RestartServer',
+                                      'TypeHierarchy',
                                       'ExecuteCommand' ) )
 
 
