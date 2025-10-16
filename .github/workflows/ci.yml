@@ -172,108 +172,108 @@ jobs:
         YCM_TESTRUN=1 python3 build.py --clang-completer --clang-tidy --valgrind
         python3 run_tests.py --valgrind --skip-build --no-flake8 --quiet
 
-  # windows:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       runs-on: [ windows-2022 ]
-  #       benchmark: [ true, false ]
-  #       python-arch: [ 'x64', 'x86' ]
-  #       msvc: [ 17 ]
-  #       exclude:
-  #         - runs-on: windows-2022
-  #           benchmark: true
-  #           python-arch: 'x86'
-  #       include:
-  #         - runs-on: windows-2019
-  #           benchmark: false
-  #           python-arch: 'x64'
-  #           msvc: 16
-  #   runs-on: ${{ matrix.runs-on }}
-  #   env:
-  #     USE_CLANG_COMPLETER: ${{ matrix.libclang }}
-  #     COVERAGE: ${{ !matrix.benchmark }}
-  #   name: "Windows MSVC ${{ matrix.msvc }} ${{ matrix.python-arch }} - ${{ matrix.benchmark && 'C++ Benchmark' || 'test run' }}"
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #     with:
-  #       submodules: recursive
-  #       fetch-depth: 0
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ windows-2022 ]
+        benchmark: [ true, false ]
+        python-arch: [ 'x64', 'x86' ]
+        msvc: [ 17 ]
+        exclude:
+          - runs-on: windows-2022
+            benchmark: true
+            python-arch: 'x86'
+        include:
+          - runs-on: windows-2019
+            benchmark: false
+            python-arch: 'x64'
+            msvc: 16
+    runs-on: ${{ matrix.runs-on }}
+    env:
+      USE_CLANG_COMPLETER: ${{ matrix.libclang }}
+      COVERAGE: ${{ !matrix.benchmark }}
+    name: "Windows MSVC ${{ matrix.msvc }} ${{ matrix.python-arch }} - ${{ matrix.benchmark && 'C++ Benchmark' || 'test run' }}"
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
 
-  #   - uses: actions/cache@v4
-  #     if: matrix.libclang == true && matrix.benchmark == false
-  #     with:
-  #       key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
-  #       restore-keys: |
-  #         v3-libclang-${{ runner.os }}-
-  #         v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
-  #         v2-libclang-${{ runner.os }}-
-  #         v1-libclang-${{ runner.os }}-
-  #       path: |
-  #         clang_archives
-  #     name: Cache libclang
+    - uses: actions/cache@v4
+      if: matrix.libclang == true && matrix.benchmark == false
+      with:
+        key: v3-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+        restore-keys: |
+          v3-libclang-${{ runner.os }}-
+          v2-libclang-${{ runner.os }}-${{ hashFiles( 'cpp/ycm/CMakeLists.txt' ) }}
+          v2-libclang-${{ runner.os }}-
+          v1-libclang-${{ runner.os }}-
+        path: |
+          clang_archives
+      name: Cache libclang
 
-  #   - uses: actions/cache@v4
-  #     if: matrix.benchmark == false
-  #     with:
-  #       key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
-  #       restore-keys: |
-  #         v2-deps-${{ runner.os }}-
-  #         v1-deps-${{ runner.os }}-
-  #       path: |
-  #         third-party/clangd/cache
-  #         third_party/eclipse.jdt.ls/target/cache
-  #         third_party/go
-  #         third_party/omnisharp-roslyn/v[0-9]*
-  #     name: Cache dependencies
+    - uses: actions/cache@v4
+      if: matrix.benchmark == false
+      with:
+        key: v2-deps-${{ runner.os }}-${{ hashFiles( 'build.py' ) }}
+        restore-keys: |
+          v2-deps-${{ runner.os }}-
+          v1-deps-${{ runner.os }}-
+        path: |
+          third-party/clangd/cache
+          third_party/eclipse.jdt.ls/target/cache
+          third_party/go
+          third_party/omnisharp-roslyn/v[0-9]*
+      name: Cache dependencies
 
-  #   - uses: actions/cache@v4
-  #     if: matrix.benchmark == false
-  #     with:
-  #       key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
-  #       restore-keys: |
-  #         v2-testdeps-${{ runner.os }}-
-  #         v1-testdeps-${{ runner.os }}-
-  #       path: |
-  #         third-party/lombok/cache
-  #         ~/.npm
-  #     name: Cache test deps
+    - uses: actions/cache@v4
+      if: matrix.benchmark == false
+      with:
+        key: v2-testdeps-${{ runner.os }}-${{ hashFiles( 'run_tests.py' ) }}
+        restore-keys: |
+          v2-testdeps-${{ runner.os }}-
+          v1-testdeps-${{ runner.os }}-
+        path: |
+          third-party/lombok/cache
+          ~/.npm
+      name: Cache test deps
 
-  #   - name: Install Java
-  #     if: matrix.benchmark == false
-  #     uses: actions/setup-java@v4
-  #     with:
-  #       java-version: 17
-  #       distribution: 'temurin'
-  #   - name: Install Python
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: '3.9'
-  #       architecture: ${{ matrix.python-arch }}
-  #   - name: Install Go
-  #     if: matrix.benchmark == false
-  #     uses: actions/setup-go@v5
-  #     with:
-  #       go-version: stable
-  #       cache: false
-  #   - name: Run pip and prepare coverage
-  #     if: matrix.benchmark == false
-  #     run: |
-  #       python3 -m pip install -r test_requirements.txt
-  #       echo -e "import coverage\ncoverage.process_startup()" > $(python -c "print(__import__('sysconfig').get_path('purelib'))")/sitecustomize.py
-  #     shell: bash
-  #   - name: Run benchmarks
-  #     if: matrix.benchmark == true
-  #     run: python3 benchmark.py --msvc ${{ matrix.msvc }} --quiet
-  #   - name: Run tests
-  #     if: matrix.benchmark == false
-  #     run: python3 run_tests.py --msvc ${{ matrix.msvc }} --quiet
-  #   - name: Combine and summarise coverage
-  #     if: matrix.benchmark == false
-  #     run: coverage combine && coverage xml
-  #   - name: Upload coverage data
-  #     uses: codecov/codecov-action@v4
-  #     if: matrix.benchmark == false
-  #     with:
-  #       name: "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests"
-  #       token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Install Java
+      if: matrix.benchmark == false
+      uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: 'temurin'
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+        architecture: ${{ matrix.python-arch }}
+    - name: Install Go
+      if: matrix.benchmark == false
+      uses: actions/setup-go@v5
+      with:
+        go-version: stable
+        cache: false
+    - name: Run pip and prepare coverage
+      if: matrix.benchmark == false
+      run: |
+        python3 -m pip install -r test_requirements.txt
+        echo -e "import coverage\ncoverage.process_startup()" > $(python -c "print(__import__('sysconfig').get_path('purelib'))")/sitecustomize.py
+      shell: bash
+    - name: Run benchmarks
+      if: matrix.benchmark == true
+      run: python3 benchmark.py --msvc ${{ matrix.msvc }} --quiet
+    - name: Run tests
+      if: matrix.benchmark == false
+      run: python3 run_tests.py --msvc ${{ matrix.msvc }} --quiet
+    - name: Combine and summarise coverage
+      if: matrix.benchmark == false
+      run: coverage combine && coverage xml
+    - name: Upload coverage data
+      uses: codecov/codecov-action@v4
+      if: matrix.benchmark == false
+      with:
+        name: "${{ matrix.runs-on }}-${{ matrix.name_suffix }}-tests"
+        token: ${{ secrets.CODECOV_TOKEN }}
