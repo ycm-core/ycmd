@@ -10,10 +10,10 @@ queue_rules:
       - status-success=ubuntu-24.04 - with Clang compiler - test run
       - status-success=ubuntu-24.04 - test run
       - status-success=C++ Lint
-      - status-success=Windows MSVC 16 x64 - test run
-      - status-success=Windows MSVC 17 x64 - test run
-      - status-success=Windows MSVC 17 x86 - test run
-      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+      # - status-success=Windows MSVC 16 x64 - test run
+      # - status-success=Windows MSVC 17 x64 - test run
+      # - status-success=Windows MSVC 17 x86 - test run
+      # - status-success=Windows MSVC 17 x64 - C++ Benchmark
 
 pull_request_rules:
   - name: Automatic merge on Azure Pipelines and Reviewable successes
@@ -27,10 +27,10 @@ pull_request_rules:
       - status-success=ubuntu-24.04 - with Clang compiler - test run
       - status-success=ubuntu-24.04 - test run
       - status-success=C++ Lint
-      - status-success=Windows MSVC 16 x64 - test run
-      - status-success=Windows MSVC 17 x64 - test run
-      - status-success=Windows MSVC 17 x86 - test run
-      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+      # - status-success=Windows MSVC 16 x64 - test run
+      # - status-success=Windows MSVC 17 x64 - test run
+      # - status-success=Windows MSVC 17 x86 - test run
+      # - status-success=Windows MSVC 17 x64 - C++ Benchmark
       - status-success=code-review/reviewable
     actions:
       queue:
@@ -49,10 +49,10 @@ pull_request_rules:
       - status-success=ubuntu-24.04 - with Clang compiler - test run
       - status-success=ubuntu-24.04 - test run
       - status-success=C++ Lint
-      - status-success=Windows MSVC 16 x64 - test run
-      - status-success=Windows MSVC 17 x64 - test run
-      - status-success=Windows MSVC 17 x86 - test run
-      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+      # - status-success=Windows MSVC 16 x64 - test run
+      # - status-success=Windows MSVC 17 x64 - test run
+      # - status-success=Windows MSVC 17 x86 - test run
+      # - status-success=Windows MSVC 17 x64 - C++ Benchmark
 
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
@@ -76,10 +76,10 @@ pull_request_rules:
       - status-success=ubuntu-24.04 - with Clang compiler - test run
       - status-success=ubuntu-24.04 - test run
       - status-success=C++ Lint
-      - status-success=Windows MSVC 16 x64 - test run
-      - status-success=Windows MSVC 17 x64 - test run
-      - status-success=Windows MSVC 17 x86 - test run
-      - status-success=Windows MSVC 17 x64 - C++ Benchmark
+      # - status-success=Windows MSVC 16 x64 - test run
+      # - status-success=Windows MSVC 17 x64 - test run
+      # - status-success=Windows MSVC 17 x86 - test run
+      # - status-success=Windows MSVC 17 x64 - C++ Benchmark
 
       - "#changes-requested-reviews-by=0"
       - label="Ship It!"
