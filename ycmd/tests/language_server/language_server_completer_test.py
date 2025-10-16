@@ -1482,11 +1482,11 @@ class LanguageServerCompleterTest( TestCase ):
 
   @IsolatedYcmd()
   @patch.object( completer, 'MESSAGE_POLL_TIMEOUT', 0.01 )
-  def test_LanguageServerCompleter_PollForMessages_ServerNotStarted(
+  def test_LanguageServerCompleter_PollForMessages_ServerStartTooLong(
       self, app ):
     server = MockCompleter()
     request_data = RequestWrap( BuildRequest() )
-    assert_that( server.PollForMessages( request_data ), equal_to( True ) )
+    assert_that( server.PollForMessages( request_data ), equal_to( False ) )
 
 
   @IsolatedYcmd()
