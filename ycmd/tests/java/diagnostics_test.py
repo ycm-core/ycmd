@@ -34,6 +34,7 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR, # noqa
                               PathToTestFile,
                               SharedYcmd,
                               StartJavaCompleterServerInDirectory,
+                              StartJavaCompleterServerWithFile,
                               setUpModule,
                               tearDownModule )
 
@@ -72,7 +73,6 @@ youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
                                      'Test.java' )
 
 DIAG_MATCHERS_PER_FILE = {
-  PathToTestFile( DEFAULT_PROJECT_DIR ): empty(),
   TestFactory: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
@@ -321,8 +321,7 @@ class DiagnosticsTest( TestCase ):
   @WithRetry()
   @IsolatedYcmd()
   def test_Poll_Diagnostics_ProjectWide_Eclipse( self, app ):
-    StartJavaCompleterServerInDirectory( app,
-                                         PathToTestFile( DEFAULT_PROJECT_DIR ) )
+    StartJavaCompleterServerWithFile( app, TestFactory )
 
     filepath = TestLauncher
     contents = ReadFile( filepath )

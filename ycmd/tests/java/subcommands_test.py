@@ -184,7 +184,7 @@ def RunFixItTest( app,
     result = RunTest( app, test )
     if result[ 'fixits' ]:
       resolved_fixits[ 'fixits' ].append( result[ 'fixits' ][ 0 ] )
-  print( 'completer response: ', json.dumps( resolved_fixits ) )
+  print( 'completer response: ', json.dumps( resolved_fixits, indent = 2 ) )
   assert_that( resolved_fixits, fixits_for_line )
 
 
@@ -1267,20 +1267,11 @@ class SubcommandsTest( TestCase ):
     fixits = has_entries( {
       'fixits': contains_inanyorder(
         has_entries( {
-          'text': "Change type of 'test' to 'boolean'",
-          'kind': 'quickfix',
-          'chunks': contains_exactly(
-            ChunkMatcher( 'boolean',
-                          LocationMatcher( filepath, 14, 12 ),
-                          LocationMatcher( filepath, 14, 15 ) ),
-          ),
-        } ),
-        has_entries( {
           'text': 'Generate toString()',
           'kind': 'source.generate.toString',
           'chunks': contains_exactly(
-            ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                          '\n    return "TestFactory []";\n}',
+            ChunkMatcher( '\n\n  @Override\n  public String toString() {'
+                          '\n    return "TestFactory []";\n  }',
                           LocationMatcher( filepath, 32, 4 ),
                           LocationMatcher( filepath, 32, 4 ) ),
           ),
@@ -1292,19 +1283,6 @@ class SubcommandsTest( TestCase ):
             ChunkMatcher( '\n\nimport com.test.wobble.Wibble;\n\n',
                           LocationMatcher( filepath, 1, 18 ),
                           LocationMatcher( filepath, 3, 1 ) ),
-          ),
-        } ),
-        has_entries( {
-          'text': 'Change modifiers to final where possible',
-          'kind': 'source.generate.finalModifiers',
-          'chunks': contains_exactly(
-            ChunkMatcher(
-              'final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {'
-              '\n    }\n  }\n\n  public AbstractTestWidget getWidget'
-              '( final String info ) {\n    final AbstractTestWidget'
-              ' w = new TestWidgetImpl( info );\n    final ',
-              LocationMatcher( filepath, 18, 24 ),
-              LocationMatcher( filepath, 25, 5 ) ),
           ),
         } ),
         has_entries( {
@@ -1463,10 +1441,6 @@ class SubcommandsTest( TestCase ):
           } ),
           has_entries( {
             'text': "Organize imports",
-            'chunks': instance_of( list ),
-          } ),
-          has_entries( {
-            'text': 'Change modifiers to final where possible',
             'chunks': instance_of( list ),
           } ),
           has_entries( {
@@ -1741,26 +1715,11 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': 'Change modifiers to final where possible',
-          'kind': 'source.generate.finalModifiers',
-          'chunks': contains_exactly(
-            ChunkMatcher( "final Wibble w ) {\n    "
-                          "if ( w == Wibble.CUTHBERT ) {"
-                          "\n    }\n  }\n\n  public "
-                          "AbstractTestWidget getWidget"
-                          "( final String info ) {\n    final "
-                          "AbstractTestWidget w = new TestWidgetImpl( info );"
-                          "\n    final ",
-                          LocationMatcher( '', 18, 24 ),
-                          LocationMatcher( '', 25, 5 ) ),
-          ),
-        } ),
-        has_entries( {
           'text': 'Generate toString()',
           'kind': 'source.generate.toString',
           'chunks': contains_exactly(
-            ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                          '\n    return "TestFactory []";\n}',
+            ChunkMatcher( '\n\n  @Override\n  public String toString() {'
+                          '\n    return "TestFactory []";\n  }',
                           LocationMatcher( '', 32, 4 ),
                           LocationMatcher( '', 32, 4 ) ),
           ),

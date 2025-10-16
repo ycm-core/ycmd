@@ -586,8 +586,19 @@ class LanguageServerConnection( threading.Thread ):
         for watcher in reg[ 'registerOptions' ][ 'watchers' ]:
           # TODO: Take care of watcher kinds. Not everything needs
           # to be watched for create, modify *and* delete actions.
-          pattern = os.path.join( self._project_directory,
-                                  watcher[ 'globPattern' ] )
+
+          base, pattern = self._project_directory, watcher[ 'globPattern' ]
+          if isinstance( pattern, dict ):
+            # RelativePattern
+            base, pattern = (
+              watcher[ 'globPattern' ][ 'baseUri' ],
+              watcher[ 'globPattern' ][ 'pattern' ]
+            )
+          if isinstance( base, dict ):
+            # WorkspaceFolder
+            base = base[ 'uri' ]
+
+          pattern = os.path.join( base, pattern )
           if os.path.isdir( pattern ):
             pattern = os.path.join( pattern, '**' )
           globs.append( pattern )
