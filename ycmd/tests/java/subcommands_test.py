@@ -23,6 +23,7 @@ from hamcrest import ( assert_that,
                        equal_to,
                        has_entries,
                        has_entry,
+                       has_item,
                        has_items,
                        instance_of,
                        is_not,
@@ -37,13 +38,16 @@ from ycmd.tests.java import setUpModule, tearDownModule # noqa
 from ycmd.tests.java import ( PathToTestFile,
                               SharedYcmd,
                               StartJavaCompleterServerWithFile,
-                              IsolatedYcmd )
+                              IsolatedYcmd,
+                              WaitUntilJavaCompleterServerReady,
+                              WaitForDiagnosticsForFile )
 from ycmd.tests.test_utils import ( BuildRequest,
                                     ChunkMatcher,
                                     CombineRequest,
                                     ErrorMatcher,
                                     ExpectedFailure,
                                     LocationMatcher,
+                                    WaitForDiagnosticsToBeReady,
                                     WithRetry )
 from unittest.mock import patch
 from unittest import TestCase
@@ -163,6 +167,10 @@ def RunFixItTest( app,
                   col,
                   fixits_for_line,
                   extra_request_data = None ):
+
+  WaitUntilJavaCompleterServerReady( app )
+  WaitForDiagnosticsToBeReady( app, filepath, ReadFile( filepath ), 'java' )
+
   test = {
     'description': description,
     'request': {
@@ -184,7 +192,7 @@ def RunFixItTest( app,
     result = RunTest( app, test )
     if result[ 'fixits' ]:
       resolved_fixits[ 'fixits' ].append( result[ 'fixits' ][ 0 ] )
-  print( 'completer response: ', json.dumps( resolved_fixits ) )
+  print( 'completer response: ', json.dumps( resolved_fixits, indent = 2 ) )
   assert_that( resolved_fixits, fixits_for_line )
 
 
@@ -1141,7 +1149,7 @@ class SubcommandsTest( TestCase ):
               'text': "Create constant 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( '\n\nprivate static final String Wibble = null;'
+                ChunkMatcher( '\n\n  private static final String Wibble = null;'
                               '\n\n  private void Wimble( Wibble w ) {'
                               '\n    if ( w == Wibble',
                               LocationMatcher( filepath, 16, 4 ),
@@ -1167,6 +1175,16 @@ class SubcommandsTest( TestCase ):
               ),
             } ),
             has_entries( {
+              'text': "Create record 'Wibble'",
+              'kind': 'quickfix',
+              'chunks': contains_exactly(
+                ChunkMatcher(
+                  'package com.test;\n\npublic record Wibble() {\n\n}\n',
+                  LocationMatcher( wibble_path, 1, 1 ),
+                  LocationMatcher( wibble_path, 1, 1 ) ),
+              ),
+            } ),
+            has_entries( {
               'text': "Create enum 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
@@ -1188,7 +1206,7 @@ class SubcommandsTest( TestCase ):
               'text': "Create field 'Wibble'",
               'kind': 'quickfix',
               'chunks': contains_exactly(
-                ChunkMatcher( '\n\nprivate Object Wibble;'
+                ChunkMatcher( '\n\n  private Object Wibble;'
                               '\n\n  private void Wimble( Wibble w ) {'
                               '\n    if ( w == Wibble',
                               LocationMatcher( filepath, 16, 4 ),
@@ -1209,7 +1227,7 @@ class SubcommandsTest( TestCase ):
               'kind': 'source.generate.toString',
               'chunks': contains_exactly(
                 ChunkMatcher( '@Override\npublic String toString() {'
-                              '\n    return "TestFactory []";\n}\n\n',
+                              '\n    return "TestFactory []";\n}\n\n  ',
                               LocationMatcher( filepath, 23, 3 ),
                               LocationMatcher( filepath, 23, 3 ) ),
               ),
@@ -1224,31 +1242,21 @@ class SubcommandsTest( TestCase ):
               ),
             } ),
             has_entries( {
-              'text': 'Change modifiers to final where possible',
-              'kind': 'source.generate.finalModifiers',
-              'chunks': contains_exactly(
-                ChunkMatcher(
-                  'final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {'
-                  '\n    }\n  }\n\n  public AbstractTestWidget getWidget'
-                  '( final String info ) {\n    final AbstractTestWidget'
-                  ' w = new TestWidgetImpl( info );\n    final ',
-                              LocationMatcher( filepath, 18, 24 ),
-                              LocationMatcher( filepath, 25, 5 ) ),
-              ),
-            } ),
-            has_entries( {
               'kind': 'quickassist',
               'text': "Add Javadoc comment"
             } ),
             has_entries( {
               'text': "Sort Members for 'TestFactory.java'"
             } ),
+            # NOTE: bug (it seems) in jdt.ls, reports this code action 2x with
+            # different kinds
             has_entries( {
-              'text': "Add all missing imports"
+              'text': "Add all missing imports",
+              'kind': 'quickfix',
             } ),
-            # NOTE: bug (it seems) in jdt.ls, reports this code action 2x
             has_entries( {
-              'text': "Add all missing imports"
+              'text': "Add all missing imports",
+              'kind': 'source',
             } ),
           )
         } )
@@ -1267,20 +1275,11 @@ class SubcommandsTest( TestCase ):
     fixits = has_entries( {
       'fixits': contains_inanyorder(
         has_entries( {
-          'text': "Change type of 'test' to 'boolean'",
-          'kind': 'quickfix',
-          'chunks': contains_exactly(
-            ChunkMatcher( 'boolean',
-                          LocationMatcher( filepath, 14, 12 ),
-                          LocationMatcher( filepath, 14, 15 ) ),
-          ),
-        } ),
-        has_entries( {
           'text': 'Generate toString()',
           'kind': 'source.generate.toString',
           'chunks': contains_exactly(
-            ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                          '\n    return "TestFactory []";\n}',
+            ChunkMatcher( '\n\n  @Override\n  public String toString() {'
+                          '\n    return "TestFactory []";\n  }',
                           LocationMatcher( filepath, 32, 4 ),
                           LocationMatcher( filepath, 32, 4 ) ),
           ),
@@ -1295,19 +1294,6 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': 'Change modifiers to final where possible',
-          'kind': 'source.generate.finalModifiers',
-          'chunks': contains_exactly(
-            ChunkMatcher(
-              'final Wibble w ) {\n    if ( w == Wibble.CUTHBERT ) {'
-              '\n    }\n  }\n\n  public AbstractTestWidget getWidget'
-              '( final String info ) {\n    final AbstractTestWidget'
-              ' w = new TestWidgetImpl( info );\n    final ',
-              LocationMatcher( filepath, 18, 24 ),
-              LocationMatcher( filepath, 25, 5 ) ),
-          ),
-        } ),
-        has_entries( {
           'text': "Add Javadoc comment"
         } ),
         has_entries( {
@@ -1316,6 +1302,10 @@ class SubcommandsTest( TestCase ):
         has_entries( {
           'text': "Add all missing imports"
         } ),
+        has_entries( {
+          'text': "Change type of 'test' to 'boolean'",
+          'kind': 'quickfix',
+        } )
       )
     } )
 
@@ -1329,74 +1319,53 @@ class SubcommandsTest( TestCase ):
                                'src',
                                'com',
                                'test',
-                               'TestFactory.java' )
+                               'TestUnused.java' )
+
+
+    diags = WaitForDiagnosticsForFile(
+      app,
+      filepath,
+      ReadFile( filepath ),
+      filepath,
+      lambda d: d )
+    assert_that( diags, has_items(
+      has_entries( {
+        'kind': 'WARNING',
+        'text': 'The import java.util.ArrayList is never used [268435844]',
+        'location': LocationMatcher( filepath, 3, 8 ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': 'WARNING',
+        'text': 'The value of the field Unused.not_used is not used '
+                '[570425421]',
+        'location': LocationMatcher( filepath, 6, 15 ),
+        'fixit_available': False
+      } ),
+      has_entries( {
+        'kind': 'WARNING',
+        'text': 'The method Unusable() from the type Unused is never used '
+                'locally [603979894]',
+        'location': LocationMatcher( filepath, 10, 16 ),
+        'fixit_available': False
+      } )
+    ) )
 
     fixits = has_entries( {
-      'fixits': contains_inanyorder(
+      'fixits': has_item(
         has_entries( {
-          'text': "Remove 'testString', keep assignments with side effects",
+          'text': "Remove unused import",
           'kind': 'quickfix',
           'chunks': contains_exactly(
             ChunkMatcher( '',
-                          LocationMatcher( filepath, 14, 21 ),
-                          LocationMatcher( filepath, 15, 30 ) ),
+                          LocationMatcher( filepath, 1, 18 ),
+                          LocationMatcher( filepath, 3, 28 ) ),
           ),
-        } ),
-        # The edit reported for this is huge and uninteresting really. Manual
-        # testing can show that it works. This test is really about the previous
-        # FixIt (and nonetheless, the previous tests ensure that we correctly
-        # populate the chunks list; the contents all come from jdt.ls)
-        has_entries( {
-          'text': "Organize imports",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': "Generate Getter and Setter for 'testString'",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': "Generate Getters and Setters",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': "Generate Getters",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': "Generate Setters",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': "Generate Getter for 'testString'",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': "Generate Setter for 'testString'",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': 'Change modifiers to final where possible',
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'kind': 'quickassist',
-          'text': "Add Javadoc comment",
-          'chunks': instance_of( list )
-        } ),
-        has_entries( {
-          'text': "Sort Members for 'TestFactory.java'"
-        } ),
-        has_entries( {
-          'text': "Add all missing imports"
-        } ),
-        has_entries( {
-          'text': "Add @SuppressWarnings 'unused' to 'testString'"
         } ),
       )
     } )
 
-    RunFixItTest( app, 'FixIts can change lines as well as add them',
-                  filepath, 15, 29, fixits )
+    RunFixItTest( app, 'FixIts can remove lines', filepath, 3, 5, fixits )
 
 
   @SharedYcmd
@@ -1466,10 +1435,6 @@ class SubcommandsTest( TestCase ):
             'chunks': instance_of( list ),
           } ),
           has_entries( {
-            'text': 'Change modifiers to final where possible',
-            'chunks': instance_of( list ),
-          } ),
-          has_entries( {
             'text': "Add Javadoc comment",
             'chunks': instance_of( list ),
           } ),
@@ -1511,7 +1476,7 @@ class SubcommandsTest( TestCase ):
               matches_regexp(
                 'private String \\w+;\n'
                 '\n'
-                '    @Override\n'
+                '      @Override\n'
                 '      public void launch\\(\\) {\n'
                 '        AbstractTestWidget w = '
                 'factory.getWidget\\( "Test" \\);\n'
@@ -1633,9 +1598,6 @@ class SubcommandsTest( TestCase ):
                   filepath, 1, 1, has_entries( {
                     'fixits': contains_inanyorder(
                       has_entries( {
-                        'text': 'Change modifiers to final where possible',
-                        'chunks': instance_of( list ) } ),
-                      has_entries( {
                         'text': "Sort Members for 'TestFactory.java'" } ),
                       has_entries( {
                         'text': "Add all missing imports" } ),
@@ -1680,7 +1642,7 @@ class SubcommandsTest( TestCase ):
               '    // TODO Auto-generated method stub\n'
               '    throw new UnsupportedOperationException('
               '"Unimplemented method \'doUnicødeTes\'");\n'
-              '}\n\n\n',
+              '}\n\n\n  ',
                           LocationMatcher( TEST_JAVA, 13, 10 ),
                           LocationMatcher( TEST_JAVA, 20, 3 ) ),
           ),
@@ -1741,26 +1703,11 @@ class SubcommandsTest( TestCase ):
           ),
         } ),
         has_entries( {
-          'text': 'Change modifiers to final where possible',
-          'kind': 'source.generate.finalModifiers',
-          'chunks': contains_exactly(
-            ChunkMatcher( "final Wibble w ) {\n    "
-                          "if ( w == Wibble.CUTHBERT ) {"
-                          "\n    }\n  }\n\n  public "
-                          "AbstractTestWidget getWidget"
-                          "( final String info ) {\n    final "
-                          "AbstractTestWidget w = new TestWidgetImpl( info );"
-                          "\n    final ",
-                          LocationMatcher( '', 18, 24 ),
-                          LocationMatcher( '', 25, 5 ) ),
-          ),
-        } ),
-        has_entries( {
           'text': 'Generate toString()',
           'kind': 'source.generate.toString',
           'chunks': contains_exactly(
-            ChunkMatcher( '\n\n@Override\npublic String toString() {'
-                          '\n    return "TestFactory []";\n}',
+            ChunkMatcher( '\n\n  @Override\n  public String toString() {'
+                          '\n    return "TestFactory []";\n  }',
                           LocationMatcher( '', 32, 4 ),
                           LocationMatcher( '', 32, 4 ) ),
           ),

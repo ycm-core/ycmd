@@ -34,6 +34,8 @@ from ycmd.tests.java import ( DEFAULT_PROJECT_DIR, # noqa
                               PathToTestFile,
                               SharedYcmd,
                               StartJavaCompleterServerInDirectory,
+                              StartJavaCompleterServerWithFile,
+                              WaitForDiagnosticsForFile,
                               setUpModule,
                               tearDownModule )
 
@@ -65,6 +67,7 @@ def ProjectPath( *args ):
 TestFactory = ProjectPath( 'TestFactory.java' )
 TestLauncher = ProjectPath( 'TestLauncher.java' )
 TestWidgetImpl = ProjectPath( 'TestWidgetImpl.java' )
+TestUnused = ProjectPath( 'TestUnused.java' )
 youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
                                      'src',
                                      'com',
@@ -72,7 +75,6 @@ youcompleteme_Test = PathToTestFile( DEFAULT_PROJECT_DIR,
                                      'Test.java' )
 
 DIAG_MATCHERS_PER_FILE = {
-  PathToTestFile( DEFAULT_PROJECT_DIR ): empty(),
   TestFactory: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
@@ -221,37 +223,28 @@ DIAG_MATCHERS_PER_FILE = {
       'fixit_available': False
     } ),
   ),
+  TestUnused: contains_inanyorder(
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'The import java.util.ArrayList is never used [268435844]',
+      'location': LocationMatcher( TestUnused, 3, 8 ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'The value of the field Unused.not_used is not used [570425421]',
+      'location': LocationMatcher( TestUnused, 6, 15 ),
+      'fixit_available': False
+    } ),
+    has_entries( {
+      'kind': 'WARNING',
+      'text': 'The method Unusable() from the type Unused is never used '
+              'locally [603979894]',
+      'location': LocationMatcher( TestUnused, 10, 16 ),
+      'fixit_available': False
+    } )
+  )
 }
-
-
-def _WaitForDiagnosticsForFile( app,
-                                filepath,
-                                contents,
-                                diags_filepath,
-                                diags_are_ready = lambda d: True,
-                                **kwargs ):
-  diags = None
-  try:
-    for message in PollForMessages( app,
-                                    { 'filepath': filepath,
-                                      'contents': contents,
-                                      'filetype': 'java' },
-                                    **kwargs ):
-      if ( 'diagnostics' in message and
-           message[ 'filepath' ] == diags_filepath ):
-        print( f'Message { pformat( message ) }' )
-        diags = message[ 'diagnostics' ]
-        if diags_are_ready( diags ):
-          return diags
-
-      # Eventually PollForMessages will throw a timeout exception and we'll fail
-      # if we don't see the diagnostics go empty
-  except PollForMessagesTimeoutException as e:
-    raise AssertionError(
-      f'{ e }. Timed out waiting for diagnostics for file { diags_filepath }.'
-    )
-
-  return diags
 
 
 @contextlib.contextmanager
@@ -321,8 +314,7 @@ class DiagnosticsTest( TestCase ):
   @WithRetry()
   @IsolatedYcmd()
   def test_Poll_Diagnostics_ProjectWide_Eclipse( self, app ):
-    StartJavaCompleterServerInDirectory( app,
-                                         PathToTestFile( DEFAULT_PROJECT_DIR ) )
+    StartJavaCompleterServerWithFile( app, TestFactory )
 
     filepath = TestLauncher
     contents = ReadFile( filepath )
@@ -572,11 +564,11 @@ public class Test {
     assert results
 
     # Check that we have diagnostics for the saved file
-    diags = _WaitForDiagnosticsForFile( app,
-                                        filepath,
-                                        contents,
-                                        unsaved_buffer_path,
-                                        lambda d: d )
+    diags = WaitForDiagnosticsForFile( app,
+                                       filepath,
+                                       contents,
+                                       unsaved_buffer_path,
+                                       lambda d: d )
     assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
 
     # Now update the unsaved file with new contents
@@ -588,11 +580,11 @@ public class Test {
     app.post_json( '/event_notification', event_data )
 
     # Check that we have no diagnostics for the dirty file
-    diags = _WaitForDiagnosticsForFile( app,
-                                        filepath,
-                                        contents,
-                                        unsaved_buffer_path,
-                                        lambda d: not d )
+    diags = WaitForDiagnosticsForFile( app,
+                                       filepath,
+                                       contents,
+                                       unsaved_buffer_path,
+                                       lambda d: not d )
     assert_that( diags, empty() )
 
     # Now send the request again, but don't include the unsaved file. It should
@@ -604,11 +596,11 @@ public class Test {
     app.post_json( '/event_notification', event_data )
 
     # Check that we now have diagnostics for the previously-dirty file
-    diags = _WaitForDiagnosticsForFile( app,
-                                        filepath,
-                                        contents,
-                                        unsaved_buffer_path,
-                                        lambda d: d )
+    diags = WaitForDiagnosticsForFile( app,
+                                       filepath,
+                                       contents,
+                                       unsaved_buffer_path,
+                                       lambda d: d )
 
     assert_that( diags, DIAG_MATCHERS_PER_FILE[ unsaved_buffer_path ] )
 
