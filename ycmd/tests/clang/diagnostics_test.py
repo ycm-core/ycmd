@@ -297,7 +297,11 @@ int main() {
           'location_extent': RangeMatcher( PathToTestFile( 'unity.h' ),
                                            ( 4, 3 ),
                                            ( 4, 14 ) ),
-          'ranges': empty(),
+          'ranges': contains_exactly(
+            RangeMatcher( PathToTestFile( 'unity.h' ),
+                          ( 4, 3 ),
+                          ( 4, 14 ) )
+          ),
           'text': equal_to( "use of undeclared identifier 'fake_method'" ),
           'fixit_available': False
         } ),
@@ -386,7 +390,9 @@ int main() {
         'kind': equal_to( 'ERROR' ),
         'location': LocationMatcher( filepath, 70, 8 ),
         'location_extent': RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) ),
-        'ranges': empty(),
+        'ranges': contains_exactly(
+          RangeMatcher( filepath, ( 70, 8 ), ( 70, 18 ) )
+        ),
         'text': equal_to( "use of undeclared identifier 'undeclared'" ),
         'fixit_available': False
       } ),
