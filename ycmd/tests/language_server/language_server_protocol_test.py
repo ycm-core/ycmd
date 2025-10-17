@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from ycmd.completers.language_server import language_server_protocol as lsp
+from ycmd.completers.java import java_utils
 from hamcrest import assert_that, equal_to, calling, is_not, raises
 from unittest import TestCase
 from ycmd.tests.test_utils import UnixOnly, WindowsOnly
@@ -153,6 +154,8 @@ class LanguageServerProtocolTest( TestCase ):
                  equal_to( '/usr/local/test/test.test' ) )
     assert_that( lsp.UriToFilePath( 'file:///usr/local/test/test.test' ),
                  equal_to( '/usr/local/test/test.test' ) )
+    assert_that( java_utils.UriToFilePath( 'jdt://contents/Member.class' ),
+                 equal_to( 'jdt://contents/Member.class' ) )
 
 
   @WindowsOnly
@@ -172,18 +175,24 @@ class LanguageServerProtocolTest( TestCase ):
                  equal_to( 'C:\\usr\\local\\test\\test.test' ) )
     assert_that( lsp.UriToFilePath( 'file:///c%3A/usr/local/test/test.test' ),
                  equal_to( 'C:\\usr\\local\\test\\test.test' ) )
+    assert_that( java_utils.UriToFilePath( 'jdt://contents/Member.class' ),
+                 equal_to( 'jdt://contents/Member.class' ) )
 
 
   @UnixOnly
   def test_FilePathToUri_Unix( self ):
     assert_that( lsp.FilePathToUri( '/usr/local/test/test.test' ),
                  equal_to( 'file:///usr/local/test/test.test' ) )
+    assert_that( java_utils.FilePathToUri( 'jdt://contents/Member.class' ),
+                 equal_to( 'jdt://contents/Member.class' ) )
 
 
   @WindowsOnly
   def test_FilePathToUri_Windows( self ):
     assert_that( lsp.FilePathToUri( 'C:\\usr\\local\\test\\test.test' ),
                  equal_to( 'file:///C:/usr/local/test/test.test' ) )
+    assert_that( java_utils.FilePathToUri( 'jdt://contents/Member.class' ),
+                 equal_to( 'jdt://contents/Member.class' ) )
 
 
   def test_CodepointsToUTF16CodeUnitsAndReverse( self ):
