@@ -562,7 +562,7 @@ class SubcommandsTest( TestCase ):
     filepath = PathToTestFile( 'common', 'src', 'main.rs' )
 
     for line, column, choice, chunks in [
-      ( 18, 2, 2, [
+      ( 18, 2, 4, [
         ChunkMatcher( 'pub(crate) ',
                       LocationMatcher( filepath, 18, 1 ),
                       LocationMatcher( filepath, 18, 1 ) ) ] ),
