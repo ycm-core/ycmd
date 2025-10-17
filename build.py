@@ -107,7 +107,7 @@ BUILD_ERROR_MESSAGE = (
   'issue tracker, including the entire output of this script (with --verbose) '
   'and the invocation line used to run it.' )
 
-CLANGD_VERSION = '19.1.0'
+CLANGD_VERSION = '21.1.3'
 CLANGD_BINARIES_ERROR_MESSAGE = (
   'No prebuilt Clang {version} binaries for {platform}. '
   'You\'ll have to compile Clangd {version} from source '
@@ -1170,30 +1170,30 @@ def GetClangdTarget():
   if OnWindows():
     return [
       ( 'clangd-{version}-win64',
-        '6f4a14f3f144fc39158a7088528e3c8ffa20df516404c319e42351c27dfff063' ),
+        'f3391f8255da1d101e8868a0f5b0af28cd9b1729ade6c0857286a438373dc5f3' ),
       ( 'clangd-{version}-win32',
-        '4278d11bebd7c60b945c7aa7457a82e707eeb488d24acdccdc3e354b36b808be' ) ]
+        'f2a60a8666ff79361abcf00b176c35384ccb799e86e93608360d510e99904a2e' ) ]
   if OnMac():
     if OnArm():
       return [
         ( 'clangd-{version}-arm64-apple-darwin',
-          'b65d43dc82f47a68c8faf6d9711f54a29da9f25c39c3f138466c874359e5efe8' ) ]
+          'b40b580158f8d691e3c27f9652492e8904a1d6c1026186baf38c9773ec8dc671' ) ]
     return [
       ( 'clangd-{version}-x86_64-apple-darwin',
-        'f3da3d4c97d1f8526299f2c64aaa0dbdeff5daad4e07a1937ad1d81b6407d143' ) ]
+        'beb0fa5208b3879aba6173bbc51c4fd1d71ddadaf75eb327b0e93f9c21eb8a58' ) ]
   if OnAArch64():
     return [
       ( 'clangd-{version}-aarch64-linux-gnu',
-        'c279514021924c04b0b810bf79adb3cd5d7f061acb3c4b43e4c445671b3d2a18' ) ]
+        '2927fa99de680a7427bc21e0e03199ae5a960119074be85fd9cd006513211b68' ) ]
   if OnArm():
     return [
       None, # First list index is for 64bit archives. ARMv7 is 32bit only.
       ( 'clangd-{version}-armv7a-linux-gnueabihf',
-        'f561e33a90f2053d12202d4a06477c30bf831082c01c228f1935403632bbfa81' ) ]
+        '3981e8d6b6793b7da4147733f22028fef56a8ee5e1cb56289f968f040ef1ee7e' ) ]
   if OnX86_64():
     return [
       ( 'clangd-{version}-x86_64-unknown-linux-gnu',
-        '93319be9a2ec662be57f7ce77463ac706ae4f559744f05f7cae4da3350a154b5' ) ]
+        'db6ee091461d28697b419595a44623772dd58466aad031e7a4f3beac9d668abe' ) ]
   raise InstallationFailed(
     CLANGD_BINARIES_ERROR_MESSAGE.format( version = CLANGD_VERSION,
                                           platform = 'this system' ) )
