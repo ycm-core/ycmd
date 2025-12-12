@@ -449,7 +449,7 @@ class CsharpSolutionCompleter( object ):
                                 '-s',
                                 str( self._solution_path ) ]
 
-    if ( MonoRequired( self._roslyn_path ) ):
+    if MonoRequired( self._roslyn_path ):
       self._omnisharp_command.insert( 0, self._mono_path )
 
     return self._omnisharp_command
