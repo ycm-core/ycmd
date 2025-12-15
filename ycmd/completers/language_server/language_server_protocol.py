@@ -753,7 +753,7 @@ def InlayHints( request_id, request_data ):
 
 
 def FilePathToUri( file_name ):
-  return urljoin( 'file:', pathname2url( file_name ) )
+  return urljoin( 'file://', pathname2url( file_name ) )
 
 
 def UriToFilePath( uri ):
