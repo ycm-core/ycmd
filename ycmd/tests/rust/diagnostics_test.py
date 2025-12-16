@@ -54,6 +54,7 @@ DIAG_MATCHERS_PER_FILE = {
     has_entries( {
       'kind': 'WARNING',
       'text': 'unused variable: `a`\n`#[warn(unused_variables)]` '
+              '(part of `#[warn(unused)]`) '
               'on by default [unused_variables]',
       'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
       'location_extent': RangeMatcher( MAIN_FILEPATH, ( 21, 9 ), ( 21, 10 ) ),
