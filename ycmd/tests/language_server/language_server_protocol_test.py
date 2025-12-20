@@ -204,3 +204,14 @@ class LanguageServerProtocolTest( TestCase ):
                      equal_to( code_units ) )
         assert_that( lsp.UTF16CodeUnitsToCodepoints( line_value, code_units ),
                      equal_to( codepoints ) )
+
+  def test_CodepointsToUTF16CodeUnitsSurrogate( self ):
+    for line_value, codepoints, code_units in [
+        ( '😉', 1, 1 ),
+        ( 'f😉', 2, 2 ),
+    ]:
+      with self.subTest( line_value = line_value,
+                         codepoints = codepoints,
+                         code_units = code_units ):
+        assert_that( lsp.UTF16CodeUnitsToCodepoints( line_value, code_units ),
+                     equal_to( codepoints ) )
