@@ -102,7 +102,7 @@ class DebugInfoTest( TestCase ):
 
 
   @SharedYcmd
-  def test_DebugInfo_ServerIsNotRunning_NoSolution( self, app ):
+  def test_DebugInfo_ServerIsRunning_NoSolution( self, app ):
     request_data = BuildRequest( filetype = 'cs' )
     assert_that(
       app.post_json( '/debug_info', request_data ).json,
@@ -110,12 +110,13 @@ class DebugInfoTest( TestCase ):
         'name': 'C#',
         'servers': contains_exactly( has_entries( {
           'name': 'OmniSharp',
-          'is_running': False,
+          'is_running': True,
           'executable': instance_of( str ),
-          'pid': None,
-          'address': None,
-          'port': None,
-          'logfiles': empty()
+          'pid': instance_of( int ),
+          'address': instance_of( str ),
+          'port': instance_of( int ),
+          'logfiles': contains_exactly( instance_of( str ),
+                                instance_of( str ) )
         } ) ),
         'items': empty()
       } ) )
