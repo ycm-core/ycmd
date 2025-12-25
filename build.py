@@ -114,7 +114,7 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'or use your system Clangd. '
   'See the YCM docs for details on how to use a custom Clangd.' )
 
-ACCEPTABLE_MSVC_VERSIONS = [ 17, 16, 15 ]
+ACCEPTABLE_MSVC_VERSIONS = [ 18, 17, 16, 15 ]
 
 
 def UseVsWhere( quiet, vswhere_args ):
