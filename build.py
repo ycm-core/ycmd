@@ -114,7 +114,7 @@ CLANGD_BINARIES_ERROR_MESSAGE = (
   'or use your system Clangd. '
   'See the YCM docs for details on how to use a custom Clangd.' )
 
-ACCEPTABLE_MSVC_VERSIONS = [ 17, 16, 15 ]
+ACCEPTABLE_MSVC_VERSIONS = [ 18, 17, 16, 15 ]
 
 
 def UseVsWhere( quiet, vswhere_args ):
@@ -131,7 +131,7 @@ def UseVsWhere( quiet, vswhere_args ):
       print( f'vswhere -latest returned version { latest_full_v }' )
 
     if latest_v not in ACCEPTABLE_MSVC_VERSIONS:
-      if latest_v > 17:
+      if latest_v > 18:
         if not quiet:
           print( f'MSVC Version { latest_full_v } is newer than expected.' )
       else:
