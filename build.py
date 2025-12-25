@@ -131,7 +131,7 @@ def UseVsWhere( quiet, vswhere_args ):
       print( f'vswhere -latest returned version { latest_full_v }' )
 
     if latest_v not in ACCEPTABLE_MSVC_VERSIONS:
-      if latest_v > 17:
+      if latest_v > 18:
         if not quiet:
           print( f'MSVC Version { latest_full_v } is newer than expected.' )
       else:
