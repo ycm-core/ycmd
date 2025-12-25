@@ -454,6 +454,8 @@ def GetGenerator( args ):
       return 'Visual Studio 16'
     if args.msvc == 17:
       return 'Visual Studio 17 2022'
+    if args.msvc == 18:
+      return 'Visual Studio 18 2026'
     return f"Visual Studio { args.msvc }{ ' Win64' if IS_64BIT else '' }"
   return 'Unix Makefiles'
 
