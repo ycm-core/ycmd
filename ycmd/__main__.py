@@ -27,7 +27,7 @@ if 'YCMD_DEBUGPY_PORT' in os.environ:
     pass
 
 PY_VERSION = sys.version_info[ 0 : 3 ]
-if PY_VERSION < ( 3, 8, 0 ):
+if PY_VERSION < ( 3, 12, 0 ):
   sys.exit( 8 )
 
 ROOT_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), '..' ) )

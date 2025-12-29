@@ -39,8 +39,8 @@ IS_MSYS = 'MSYS' == os.environ.get( 'MSYSTEM' )
 IS_64BIT = sys.maxsize > 2**32
 PY_MAJOR, PY_MINOR = sys.version_info[ 0 : 2 ]
 PY_VERSION = sys.version_info[ 0 : 3 ]
-if PY_VERSION < ( 3, 8, 0 ):
-  sys.exit( 'ycmd requires Python >= 3.8.0; '
+if PY_VERSION < ( 3, 12, 0 ):
+  sys.exit( 'ycmd requires Python >= 3.12.0; '
             'your version of Python is ' + sys.version +
             '\nHint: Try running python3 ' + ' '.join( sys.argv ) )
 

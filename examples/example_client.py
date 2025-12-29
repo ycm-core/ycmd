@@ -17,8 +17,8 @@
 import sys
 
 PY_VERSION = sys.version_info[ 0 : 3 ]
-if PY_VERSION < ( 3, 8, 0 ):
-  sys.exit( 'ycmd requires Python >= 3.8.0; '
+if PY_VERSION < ( 3, 12, 0 ):
+  sys.exit( 'ycmd requires Python >= 3.12.0; '
             'your version of Python is ' + sys.version +
             '\nHint: Try running python3 ' + ' '.join( sys.argv ) )
 
