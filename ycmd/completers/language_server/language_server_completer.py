@@ -1027,7 +1027,6 @@ class LanguageServerCompleter( Completer ):
     self._server_keep_logfiles = user_options[ 'server_keep_logfiles' ]
     self._stdout_file = None
     self._stderr_file = None
-    self._server_started = False
 
     self._Reset()
 
@@ -1064,6 +1063,7 @@ class LanguageServerCompleter( Completer ):
     self._extra_conf_dir = None
     self._semantic_token_atlas = None
     self._server_workspace_dirs = set()
+    self._server_started = False
 
 
   def GetCompleterName( self ):
@@ -1923,21 +1923,29 @@ class LanguageServerCompleter( Completer ):
     StartServer. In general, completers don't need to call this as it is called
     automatically in OnFileReadyToParse, but this may be used in completer
     subcommands that require restarting the underlying server."""
-    self._server_started = False
-    self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
+    try:
+      # Only attempt to start the server once - _server_started must be
+      # checked and set in a mutex to prevent race conditions.
+      with self._server_info_mutex:
+        if self._server_started:
+          LOGGER.debug( 'Server %s already started from another thread',
+                      self.GetServerName() )
+          return
+        self._server_started = True
 
-    # Only attempt to start the server once. Set this after above call as it may
-    # throw an exception
-    self._server_started = True
+      self._extra_conf_dir = self._GetSettingsFromExtraConf( request_data )
 
-    if self.StartServer( request_data, *args, **kwargs ):
-      self._SendInitialize( request_data )
+      if self.StartServer( request_data, *args, **kwargs ):
+        self._SendInitialize( request_data )
+
+    except Exception:
+      LOGGER.exception( 'Error while starting %s', self.GetServerName() )
+      # reset _server_started
+      self.Shutdown()
 
 
   def OnFileReadyToParse( self, request_data ):
-    if not self.ServerIsHealthy() and not self._server_started:
-      # We have to get the settings before starting the server, as this call
-      # might throw UnknownExtraConf.
+    if not self.ServerIsHealthy():
       self._StartAndInitializeServer( request_data )
 
     if not self.ServerIsHealthy():
@@ -2044,10 +2052,9 @@ class LanguageServerCompleter( Completer ):
           # restarted while this loop is running.
           self._initialize_event.wait( timeout=timeout )
 
-          # If the timeout is hit waiting for the server to be ready, after we
-          # tried to start the server, we return False and kill the message
-          # poll.
-          return not self._server_started or self._initialize_event.is_set()
+          # If the timeout is hit waiting for the server to be ready and
+          # initialized, we return False and kill the message poll.
+          return self._initialize_event.is_set()
 
         if not self.GetConnection():
           # The server isn't running or something. Don't re-poll, as this will
