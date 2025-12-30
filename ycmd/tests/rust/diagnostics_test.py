@@ -42,6 +42,7 @@ DIAG_MATCHERS_PER_FILE = {
   MAIN_FILEPATH: contains_inanyorder(
     has_entries( {
       'kind': 'ERROR',
+      'severity': 1,
       'text':
           'no field `build_` on type `test::Builder`\nunknown field [E0609]',
       'location': LocationMatcher( MAIN_FILEPATH, 15, 13 ),
@@ -53,6 +54,7 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
     has_entries( {
       'kind': 'WARNING',
+      'severity': 2,
       'text': 'unused variable: `a`\n`#[warn(unused_variables)]` '
               '(part of `#[warn(unused)]`) '
               'on by default [unused_variables]',
@@ -65,6 +67,7 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
     has_entries( {
       'kind': 'HINT',
+      'severity': 4,
       'text': 'if this is intentional, '
               'prefix it with an underscore: `_a` [unused_variables]',
       'location': LocationMatcher( MAIN_FILEPATH, 21, 9 ),
@@ -76,6 +79,7 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
     has_entries( {
       'kind': 'ERROR',
+      'severity': 1,
       'text': 'cannot assign twice to immutable variable `foo`\n'
               'cannot assign twice to immutable variable [E0384]',
       'location': LocationMatcher( MAIN_FILEPATH, 27, 5 ),
@@ -87,6 +91,7 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
     has_entries( {
       'kind': 'HINT',
+      'severity': 4,
       'text': 'first assignment to `foo` [E0384]',
       'location': LocationMatcher( MAIN_FILEPATH, 26, 9 ),
       'location_extent': RangeMatcher( MAIN_FILEPATH, ( 26, 9 ), ( 26, 12 ) ),
@@ -97,6 +102,7 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
     has_entries( {
       'kind': 'HINT',
+      'severity': 4,
       'text': 'consider making this binding mutable: `mut ` [E0384]',
       'location': LocationMatcher( MAIN_FILEPATH, 26, 9 ),
       'location_extent': RangeMatcher( MAIN_FILEPATH, ( 26, 9 ), ( 26, 9 ) ),
@@ -109,7 +115,7 @@ DIAG_MATCHERS_PER_FILE = {
   TEST_FILEPATH: contains_inanyorder(
     has_entries( {
       'kind': 'WARNING',
-
+      'severity': 2,
       'text': 'function cannot return without recursing\n'
               'a `loop` may express intention better if this is '
               'on purpose\n'
@@ -124,6 +130,7 @@ DIAG_MATCHERS_PER_FILE = {
     } ),
     has_entries( {
       'kind': 'HINT',
+      'severity': 4,
       'text': 'recursive call site [unconditional_recursion]',
       'location': LocationMatcher( TEST_FILEPATH, 14, 5 ),
       'location_extent': RangeMatcher( TEST_FILEPATH, ( 14, 5 ), ( 14, 15 ) ),
@@ -160,7 +167,11 @@ class DiagnosticsTest( TestCase ):
     results = app.post_json( '/detailed_diagnostic', request_data ).json
     assert_that( results, has_entry(
         'message',
-        'no field `build_` on type `test::Builder`\nunknown field [E0609]' ) )
+        'error[E0609]: no field `build_` on type `test::Builder`\n'
+        '  --> src/main.rs:15:13\n'
+        '   |\n'
+        '15 |     builder.build_\n'
+        '   |             ^^^^^^ unknown field\n\n' ) )
 
 
   @SharedYcmd

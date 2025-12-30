@@ -190,7 +190,8 @@ class SubcommandsTest( TestCase ):
     subcommands_data = BuildRequest( completer_target = 'rust' )
 
     assert_that( app.post_json( '/defined_subcommands', subcommands_data ).json,
-                 contains_inanyorder( 'FixIt',
+                 contains_inanyorder( 'ExpandMacro',
+                                      'FixIt',
                                       'Format',
                                       'GetDoc',
                                       'GetType',
@@ -206,6 +207,7 @@ class SubcommandsTest( TestCase ):
                                       'GoToType',
                                       'CallHierarchy',
                                       'ResolveCallHierarchyItem',
+                                      'RebuildProcMacros',
                                       'RefactorRename',
                                       'RestartServer' ) )
 
@@ -364,11 +366,15 @@ class SubcommandsTest( TestCase ):
       },
       'expect': {
         'response': requests.codes.ok,
-        'data': has_entry( 'detailed_info',
-                           'common::test\n'
-                           'pub fn create_universe()\n'
+        'data': has_entries( {
+          'detailed_info': '\n```rust\ncommon::test\n```\n'
+                           '\n```rust\npub fn create_universe()\n```\n'
+                           '\n'
                            '---\n'
-                           'Be careful when using that function' ),
+                           '\n'
+                           'Be careful when using that function',
+          'filetype': 'markdown',
+        } )
       }
     } )
 
