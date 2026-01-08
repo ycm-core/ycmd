@@ -2361,6 +2361,44 @@ class LanguageServerCompleter( Completer ):
     return os.path.dirname( filepath )
 
 
+  def FindProjectFromRootFiles( self,
+                                filepath,
+                                project_root_files,
+                                nearest=True ):
+
+    project_folder = None
+    project_root_type = None
+
+    # First, find the nearest dir that has one of the root file types
+    for folder in utils.PathsToAllParentFolders( filepath ):
+      f = Path( folder )
+      for root_file in project_root_files:
+        if next( f.glob( root_file ), [] ):
+          # Found one, store the root file and the current nearest folder
+          project_root_type = root_file
+          project_folder = folder
+          break
+      if project_folder:
+        break
+
+    if not project_folder:
+      return None
+
+    # If asking for the nearest, return the one found
+    if nearest:
+      return str( project_folder )
+
+    # Otherwise keep searching up from the nearest until we don't find any more
+    for folder in utils.PathsToAllParentFolders( os.path.join( project_folder,
+                                                               '..' ) ):
+      f = Path( folder )
+      if next( f.glob( project_root_type ), [] ):
+        project_folder = folder
+      else:
+        break
+    return project_folder
+
+
   def GetWorkspaceForFilepath( self, filepath, strict = False ):
     """Return the workspace of the provided filepath. This could be a subproject
     or a completely unrelated project to the root directory.
@@ -2371,12 +2409,12 @@ class LanguageServerCompleter( Completer ):
     reuse this implementation.
     """
     project_root_files = self.GetProjectRootFiles()
+    workspace = None
     if project_root_files:
-      for folder in utils.PathsToAllParentFolders( filepath ):
-        for root_file in project_root_files:
-          if next( Path( folder ).glob( root_file ), [] ):
-            return folder
-    return None if strict else os.path.dirname( filepath )
+      workspace = self.FindProjectFromRootFiles( filepath,
+                                                 project_root_files,
+                                                 nearest = True )
+    return workspace or ( None if strict else os.path.dirname( filepath ) )
 
 
   def _SendInitialize( self, request_data ):
