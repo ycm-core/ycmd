@@ -705,3 +705,63 @@ class GenericCompleterTest( TestCase ):
         } )
       ) } )
     ) )
+
+
+  @IsolatedYcmd( {
+    'language_server':
+      [ { 'name': 'foo',
+          'filetypes': [ 'foo' ],
+          'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ],
+          'settings': {
+            'foo.bar': 'from_vim',
+            'foo.baz': 'only_in_vim'
+          } } ] } )
+  def test_GenericLSPCompleter_Settings_FromLanguageServer( self, app ):
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'foo' ] )
+    request = BuildRequest( filepath = TEST_FILE,
+                            filetype = 'foo',
+                            line_num = 1,
+                            column_num = 1,
+                            contents = 'test',
+                            event_name = 'FileReadyToParse' )
+    app.post_json( '/event_notification', request )
+    WaitUntilCompleterServerReady( app, 'foo' )
+
+    # Check that settings from language_server config are used
+    assert_that( completer._settings.get( 'ls', {} ),
+                 has_entries( {
+                   'foo.bar': 'from_vim',
+                   'foo.baz': 'only_in_vim'
+                 } ) )
+
+
+  @IsolatedYcmd( {
+    'global_ycm_extra_conf': PathToTestFile( 'extra_confs',
+                                             'settings_extra_conf.py' ),
+    'language_server':
+      [ { 'name': 'foo',
+          'filetypes': [ 'foo' ],
+          'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ],
+          'settings': {
+            'foo.bar': 'from_vim',
+            'foo.baz': 'only_in_vim'
+          } } ] } )
+  def test_GenericLSPCompleter_Settings_MergeWithExtraConf( self, app ):
+    completer = handlers._server_state.GetFiletypeCompleter( [ 'foo' ] )
+    filepath = PathToTestFile( 'extra_confs', 'foo' )
+    request = BuildRequest( filepath = filepath,
+                            filetype = 'foo',
+                            line_num = 1,
+                            column_num = 1,
+                            contents = 'test',
+                            event_name = 'FileReadyToParse' )
+    app.post_json( '/event_notification', request )
+    WaitUntilCompleterServerReady( app, 'foo' )
+
+    # Check that settings are merged with extra_conf overriding
+    assert_that( completer._settings.get( 'ls', {} ),
+                 has_entries( {
+                   'foo.bar': 'from_vim',           # From language_server
+                   'foo.baz': 'only_in_vim',        # From language_server
+                   'java.rename.enabled': False     # From extra_conf (override)
+                 } ) )

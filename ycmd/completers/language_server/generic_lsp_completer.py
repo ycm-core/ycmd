@@ -128,3 +128,9 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
   def GetTriggerCharacters( self, server_trigger_characters ):
     return self._server_settings.get( 'triggerCharacters',
                                       server_trigger_characters )
+
+
+  def DefaultSettings( self, request_data ):
+    settings = super().DefaultSettings( request_data ).copy()
+    settings.update( self._server_settings.get( 'settings', {} ) )
+    return settings

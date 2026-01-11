@@ -290,6 +290,9 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 - `triggerCharacters`: Override the LSP server's trigger characters for
   completion. This can be useful when the server obnoxiously requests completion
   on every character or for example on whitespace characters.
+- `settings`: optional. Default language server settings. These can be overridden
+  on a per-project basis by the `Settings()` function in `.ycm_extra_conf.py`
+  files (see below).
 
 ```json
 {
@@ -298,7 +301,13 @@ wouldn't usually know about. The value is a list of dictionaries containing:
     "cmdline": [ "/path/to/gopls", "-rpc.trace" ],
     "filetypes": [ "go" ],
     "project_root_files": [ "go.mod" ],
-    "triggerCharacters": [ "." ]
+    "triggerCharacters": [ "." ],
+    "settings": {
+      "gopls": {
+        "usePlaceholders": true,
+        "staticcheck": true
+      }
+    }
   } ]
 }
 ```
@@ -333,6 +342,45 @@ Or, to use an unused  local port, set `port` to `*` and use `${port}` in the
 
 When plugging in a completer in this way, the `kwargs[ 'language' ]` will be set
 to the value of the `name` key, i.e. `gopls` in the above example.
+
+##### Language Server Settings Priority
+
+Language server settings are merged with the following priority (later overrides earlier):
+
+1. Settings from the `settings` key in `language_server` configuration (from Vim `g:ycm_language_server` option)
+2. Settings from the `ls` key returned by the `Settings()` function in
+   `.ycm_extra_conf.py`
+
+This allows you to define default language server settings in your Vim configuration, and override them on a per-project basis using `.ycm_extra_conf.py`. For example:
+
+In your Vim configuration:
+```vim
+let g:ycm_language_server = [
+\ {
+\   'name': 'gopls',
+\   'filetypes': ['go'],
+\   'cmdline': ['/path/to/gopls'],
+\   'settings': {
+\     'hoverKind': 'SynopsisDocumentation',
+\     'gopls': {
+\       'usePlaceholders': true,
+\     },
+\   },
+\ },
+\]
+```
+
+In a project's `.ycm_extra_conf.py`:
+```python
+def Settings( **kwargs ):
+  return {
+    'ls': {
+      'gopls': {
+        'usePlaceholders': false,  # Override the Vim default
+      }
+    }
+  }
+```
 
 A number of LSP completers are currently supported without `language_server`,
 usch as:
