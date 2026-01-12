@@ -132,5 +132,5 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
 
   def DefaultSettings( self, request_data ):
     settings = super().DefaultSettings( request_data ).copy()
-    settings.update( self._server_settings.get( 'settings', {} ) )
-    return settings
+    return utils.UpdateDict( settings,
+                             self._server_settings.get( 'settings', {} ) )

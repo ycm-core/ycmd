@@ -736,15 +736,27 @@ class GenericCompleterTest( TestCase ):
 
 
   @IsolatedYcmd( {
-    'global_ycm_extra_conf': PathToTestFile( 'extra_confs',
-                                             'settings_extra_conf.py' ),
+    'global_ycm_extra_conf': PathToTestFile(
+        'extra_confs',
+        'settings_extra_conf_multilayer.py'
+    ),
     'language_server':
       [ { 'name': 'foo',
           'filetypes': [ 'foo' ],
           'cmdline': [ 'node', PATH_TO_GENERIC_COMPLETER, '--stdio' ],
           'settings': {
-            'foo.bar': 'from_vim',
-            'foo.baz': 'only_in_vim'
+            'foo': {
+              'bar': 'from_vim',
+              'baz': 'only_in_vim',
+              'nested': {
+                'key': 'value_from_vim'
+              }
+            },
+              'java': {
+                'rename': {
+                  'enabled': True
+                }
+              }
           } } ] } )
   def test_GenericLSPCompleter_Settings_MergeWithExtraConf( self, app ):
     completer = handlers._server_state.GetFiletypeCompleter( [ 'foo' ] )
@@ -761,7 +773,10 @@ class GenericCompleterTest( TestCase ):
     # Check that settings are merged with extra_conf overriding
     assert_that( completer._settings.get( 'ls', {} ),
                  has_entries( {
-                   'foo.bar': 'from_vim',           # From language_server
-                   'foo.baz': 'only_in_vim',        # From language_server
-                   'java.rename.enabled': False     # From extra_conf (override)
+                   'foo': {
+                     'bar': 'from_vim',
+                     'baz': 'from_conf_file',
+                     'nested': {'key': 'from_conf_file'}
+                   },
+                   'java': {'rename': {'enabled': False}}
                  } ) )
