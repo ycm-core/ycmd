@@ -16,6 +16,7 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 import string
+from copy import deepcopy
 from ycmd import responses, utils
 from ycmd.completers.language_server import language_server_completer
 
@@ -131,6 +132,6 @@ class GenericLSPCompleter( language_server_completer.LanguageServerCompleter ):
 
 
   def DefaultSettings( self, request_data ):
-    settings = super().DefaultSettings( request_data ).copy()
-    return utils.UpdateDict( settings,
-                             self._server_settings.get( 'settings', {} ) )
+    """ Override parent method to provide default
+    settings from server config. Return a copy to avoid mutation. """
+    return deepcopy( self._server_settings.get( 'settings', {} ) )

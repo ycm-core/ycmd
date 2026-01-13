@@ -776,7 +776,7 @@ class GenericCompleterTest( TestCase ):
                    'foo': {
                      'bar': 'from_vim',
                      'baz': 'from_conf_file',
-                     'nested': {'key': 'from_conf_file'}
+                     'nested': { 'key': 'from_conf_file' }
                    },
-                   'java': {'rename': {'enabled': False}}
+                   'java': { 'rename': { 'enabled': False } }
                  } ) )

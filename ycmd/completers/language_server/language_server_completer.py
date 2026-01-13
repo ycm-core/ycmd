@@ -1901,8 +1901,7 @@ class LanguageServerCompleter( Completer ):
 
       # Merge any user-supplied 'ls' settings with the defaults
       if 'ls' in user_settings:
-        merged_ls_settings = utils.UpdateDict( merged_ls_settings,
-                                               user_settings[ 'ls' ] )
+        utils.UpdateDict( merged_ls_settings, user_settings[ 'ls' ] )
 
       user_settings[ 'ls' ] = merged_ls_settings
       self._settings = user_settings
