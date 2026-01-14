@@ -1,6 +1,8 @@
 {
   "description": "ycmd tsserver runtime area with required typescript version and plugins",
   "dependencies": {
-    "typescript": "5.7.2"
+    "typescript": "5.7.2",
+    "@vue/language-server": "^3.0.6",
+    "@vue/typescript-plugin": "^3.0.6"
   }
 }
