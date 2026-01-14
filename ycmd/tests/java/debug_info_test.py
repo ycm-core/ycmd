@@ -109,10 +109,16 @@ class DebugInfoTest( TestCase ):
             } ),
             has_entries( {
               'key': 'Settings',
-              'value': json.dumps(
-                { 'bundles': [] },
-                indent = 2,
-                sort_keys = True )
+              'value': json.dumps( {
+                'bundles': [],
+                'capabilities': {
+                  'definitionProvider': True
+                },
+                'extendedClientCapabilities': {
+                  'classFileContentsSupport': True
+                }
+              },
+                indent = 2 )
             } ),
             has_entries( { 'key': 'Startup Status',
                            'value': 'Ready' } ),
@@ -169,10 +175,17 @@ class DebugInfoTest( TestCase ):
             } ),
             has_entries( {
               'key': 'Settings',
-              'value': json.dumps(
-                { 'java.rename.enabled': False, 'bundles': [] },
-                indent = 2,
-                sort_keys = True )
+              'value': json.dumps( {
+                'bundles': [],
+                'capabilities': {
+                  'definitionProvider': True
+                },
+                'extendedClientCapabilities': {
+                  'classFileContentsSupport': True
+                },
+                'java.rename.enabled': False
+              },
+                indent = 2 )
             } ),
             has_entries( { 'key': 'Startup Status',
                            'value': 'Ready' } ),
