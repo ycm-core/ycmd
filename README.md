@@ -270,6 +270,8 @@ def Settings( **kwargs ):
              'config_sections': { 'section0': {} }
 ```
 
+##### `language_server` configuration
+
 In addition, ycmd can use any language server, given a file type and a command
 line. A user option `language_server` can be used to plug in a LSP server ycmd
 wouldn't usually know about. The value is a list of dictionaries containing:
@@ -278,11 +280,11 @@ wouldn't usually know about. The value is a list of dictionaries containing:
 - `cmdline`: the list representing the command line to execute the server
   (optional; mandatory if port not specified)
 - `port`: optional. If specified, a TCP connection is used to this port. If set
-  to `*`, an unused locall port is selected and made availble in the `cmdline`
+  to `*`, an unused local port is selected and made available in the `cmdline`
   as `${port}` (see below examples).
 - `filetypes`: list of supported filetypes.
 - `project_root_files`: Tells ycmd which files indicate project root.
-- `capabilities'`: Overrides the default LSP capabilities of ycmd.
+- `capabilities`: Overrides the default LSP capabilities of ycmd.
   - If you enable `workspace/configuration` support, check the extra conf
     details, relevant to LSP servers.
 - `additional_workspace_dirs`: Specifies statically known workspaces that should
