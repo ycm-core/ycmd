@@ -47,7 +47,11 @@ from ycmd.tests.test_utils import ( BuildRequest,
                                     RangeMatcher )
 from ycmd.tests.language_server import IsolatedYcmd, PathToTestFile
 from ycmd import handlers, utils, responses
+from ycmd.completers.java.java_utils import IsJdtContentUri
+from ycmd.completers.java.java_completer import JavaCompleter
 import os
+
+MESSAGE_INITIALIZING = 'Server is initializing. Please wait.'
 
 
 class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
@@ -88,6 +92,15 @@ class MockCompleter( lsc.LanguageServerCompleter, DummyCompleter ):
 
   def GetServerName( self ):
     return 'mock_completer'
+
+
+class MockJavaCompleter( MockCompleter, JavaCompleter ):
+  def Language( self ):
+    return 'java'
+
+
+  def GetServerName( self ):
+    return 'mock_java_completer'
 
 
 def _TupleToLSPRange( tuple ):
@@ -363,6 +376,66 @@ class LanguageServerCompleterTest( TestCase ):
 
     with patch.object( completer, 'ServerIsHealthy', return_value = False ):
       assert_that( completer.ServerIsReady(), equal_to( False ) )
+
+
+  @IsolatedYcmd()
+  def test_LanguageJavaServerCompleter_GoTo( self, app ):
+    completer = MockJavaCompleter()
+    completer._server_capabilities = {
+      'definitionProvider':     True,
+      'declarationProvider':    True,
+      'typeDefinitionProvider': True,
+      'implementationProvider': True,
+      'referencesProvider':     True
+    }
+
+    if utils.OnWindows():
+      filepath = 'C:\\test.test'
+    else:
+      filepath = '/test.test'
+
+    contents = 'line1\nline2\nline3'
+
+    request_data = RequestWrap( BuildRequest(
+      filetype = 'ycmtest',
+      filepath = filepath,
+      contents = contents,
+      line_num = 2,
+      column_num = 3
+    ) )
+
+    jdt_response = {
+      'uri': 'jdt://contents/stuff/Member.class',
+      'jdt_contents': 'mock contents',
+      'range': {
+        'start': { 'line': 0, 'character': 0 },
+        'end': { 'line': 0, 'character': 0 },
+      }
+    }
+
+    @patch.object( completer, 'ServerIsReady', return_value = True )
+    def Test( responses, command, exception, throws, *args ):
+      with patch.object( completer.GetConnection(),
+                         'GetResponse',
+                         side_effect = responses ):
+        if throws:
+          assert_that(
+            calling( completer.OnUserCommand ).with_args( [ command ],
+                                                          request_data ),
+            raises( exception )
+          )
+        else:
+          result = completer.OnUserCommand( [ command ], request_data )
+          assert_that( result, exception )
+
+
+    with patch(
+      'ycmd.completers.java.java_completer.'
+      'JavaCompleter.GetClassFileContents',
+      return_value = 'mock contents' ):
+      Test( [ {
+        'result': jdt_response
+      } ], 'GoTo', equal_to( jdt_response ), False )
 
 
   @IsolatedYcmd()
@@ -1576,3 +1649,43 @@ class LanguageServerCompleterTest( TestCase ):
     # Point to the right of range.
     # +1 because diags are half-open ranges.
     _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 4 )
+
+
+  @IsolatedYcmd()
+  def test_LanguageServerCompleter_GetClassFileContents_Success( self, app ):
+    completer = MockJavaCompleter()
+
+    with patch.object( completer, '_ServerIsInitialized', return_value = True ):
+      with patch.object( completer.GetConnection(), 'GetResponse',
+                        return_value = { 'result': 'mock contents' } ) as \
+                            get_response:
+        request_data = { 'uri': 'jdt://test' }
+        contents = completer.GetClassFileContents( request_data )
+
+        assert_that( contents, equal_to( 'mock contents' ) )
+        get_response.assert_called_once()
+
+
+  @IsolatedYcmd()
+  def test_LanguageServerCompleter_GetClassFileContents_Uninit( self, *args ):
+    completer = MockJavaCompleter()
+
+    with self.assertRaises( RuntimeError ) as context:
+      completer.GetClassFileContents( {} )
+
+    assert_that( str( context.exception ), equal_to( MESSAGE_INITIALIZING ) )
+
+
+class IsJdtContentUriTest( TestCase ):
+
+  def test_IsJdtContentUri( self ):
+    for uri, result in [
+      ( "jdt://example/class", True ),
+      ( "jdt:/contents/jdk.compiler", True ),
+      ( "file://example/class", False ),
+      ( "example/class", False ),
+      ( "jdt/example/class", False ),
+      ( 123, False ),
+    ]:
+      with self.subTest( uri = uri, result = result ):
+        self.assertEqual( IsJdtContentUri( uri ), result )
