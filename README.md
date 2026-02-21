@@ -292,11 +292,11 @@ let g:ycm_completer_settings = {
 \}
 ```
 
-**Supported keys**: `java`/`jdtls`, `go`/`gopls`, `rust`/`rust-analyzer`,
-`cpp`/`c`/`objc`/`objcpp`/`cuda`/`clangd`
+**Supported keys**: `java`, `go`, `rust`, `cpp`/`c`/`objc`/`objcpp`/`cuda`.
 
-**Settings priority**: hardcoded defaults < `g:ycm_completer_settings` <
-`.ycm_extra_conf.py`
+**Settings priority**: hardcoded defaults have the lowest priorities,
+then to set user's defaults `g:ycm_completer_settings`, and finally the
+settings from the `ls` key returned by the `Settings()` function in `.ycm_extra_conf.py`
 
 ##### `language_server` configuration
 

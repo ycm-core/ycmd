@@ -1585,27 +1585,6 @@ class LanguageServerCompleterTest( TestCase ):
 class LanguageServerCompleterSettings_test( TestCase ):
   """Tests for completer_settings configuration option."""
 
-  @IsolatedYcmd()
-  def test_GetCompleterSettingsLookupKeys_DefaultImpl( self, app ):
-    # Base implementation returns supported filetypes only
-    completer = MockCompleter()
-    completer.SupportedFiletypes = lambda: [ 'test' ]
-
-    keys = completer.GetCompleterSettingsLookupKeys()
-    assert_that( keys, equal_to( [ 'test' ] ) )
-
-
-  @IsolatedYcmd()
-  def test_GetCompleterSettingsLookupKeys_WithBinaryName( self, app ):
-    # When GetBinaryName() returns a value, it's appended to the list
-    completer = MockCompleter()
-    completer.SupportedFiletypes = lambda: [ 'test' ]
-    completer.GetBinaryName = lambda: 'test-server'
-
-    keys = completer.GetCompleterSettingsLookupKeys()
-    assert_that( keys, equal_to( [ 'test', 'test-server' ] ) )
-
-
   @IsolatedYcmd( {
     'completer_settings': {
       'test': {
@@ -1619,7 +1598,6 @@ class LanguageServerCompleterSettings_test( TestCase ):
     # Test that primary key (language name) is used from completer_settings
     completer = MockCompleter()
     completer.SupportedFiletypes = lambda: [ 'test' ]
-    completer.GetBinaryName = lambda: 'test-server'
     completer.DefaultSettings = lambda req: { 'setting1': 'hardcoded' }
 
     request_data = BuildRequest( filepath = '/tmp/test.test',
@@ -1637,28 +1615,6 @@ class LanguageServerCompleterSettings_test( TestCase ):
 
   @IsolatedYcmd( {
     'completer_settings': {
-      'test-server': {
-        'setting1': 'from_alias'
-      }
-    }
-  } )
-  def test_GetSettingsFromExtraConf_WithCompleterSettings_AliasKey( self, app ):
-    # Test that alias key (binary name) works when primary key is not present
-    completer = MockCompleter()
-    completer.SupportedFiletypes = lambda: [ 'test' ]
-    completer.GetBinaryName = lambda: 'test-server'
-    completer.DefaultSettings = lambda req: { 'setting1': 'hardcoded' }
-
-    request_data = BuildRequest( filepath = '/tmp/test.test',
-                                 filetype = 'test' )
-    completer._GetSettingsFromExtraConf( request_data )
-
-    assert_that( completer._settings[ 'ls' ][ 'setting1' ],
-                 equal_to( 'from_alias' ) )
-
-
-  @IsolatedYcmd( {
-    'completer_settings': {
       'test': { 'setting1': 'from_primary' },
       'test-server': { 'setting1': 'from_alias' }
     }
@@ -1668,8 +1624,7 @@ class LanguageServerCompleterSettings_test( TestCase ):
     with patch( 'ycmd.completers.language_server.'
                 'language_server_completer.LOGGER' ) as logger:
       completer = MockCompleter()
-      completer.SupportedFiletypes = lambda: [ 'test' ]
-      completer.GetBinaryName = lambda: 'test-server'
+      completer.SupportedFiletypes = lambda: [ 'test', 'test-server' ]
       completer.DefaultSettings = lambda req: {}
 
       request_data = BuildRequest( filepath = '/tmp/test.test',

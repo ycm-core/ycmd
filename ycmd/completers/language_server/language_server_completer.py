@@ -1883,35 +1883,6 @@ class LanguageServerCompleter( Completer ):
     return {}
 
 
-  def GetBinaryName( self ):
-    """Returns the binary/alias name for this completer to use as a lookup key.
-
-    Subclasses should override this to return the server binary name
-    (e.g., 'gopls', 'rust-analyzer', 'jdtls', 'clangd').
-
-    Returns None by default (no alias support).
-    """
-    return None
-
-
-  def GetCompleterSettingsLookupKeys( self ):
-    """Returns a list of keys to look up in user_options['completer_settings'].
-
-    The keys are checked in order and the first match is used. This allows
-    supporting both language names (primary) and server binary names (aliases).
-
-    Default implementation returns SupportedFiletypes() and GetBinaryName().
-
-    Returns:
-      List of strings representing the lookup keys in priority order.
-    """
-    keys = list( self.SupportedFiletypes() )
-    binary_name = self.GetBinaryName()
-    if binary_name and binary_name not in keys:
-      keys.append( binary_name )
-    return keys
-
-
   def _GetSettingsFromExtraConf( self, request_data ):
     # The DefaultSettings method returns only the 'language server" ('ls')
     # settings, but self._settings is a wider dict containing a 'ls' key and any
@@ -1922,7 +1893,7 @@ class LanguageServerCompleter( Completer ):
     merged_ls_settings = self.DefaultSettings( request_data )
 
     # Layer 2: Merge with global settings from g:ycm_completer_settings
-    lookup_keys = self.GetCompleterSettingsLookupKeys()
+    lookup_keys = self.SupportedFiletypes()
     completer_settings = self.user_options.get( 'completer_settings', {} )
 
     # Find first matching key and detect duplicates
