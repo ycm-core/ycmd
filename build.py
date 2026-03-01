@@ -480,7 +480,7 @@ def ParseArguments():
                        default = DEFAULT_RUST_TOOLCHAIN,
                        help = 'For advanced users ***NO SUPPORT***, specify '
                               'the rust toolchain version to install from '
-                              'rustup. Only the default vaule "' +
+                              'rustup. Only the default value "' +
                                DEFAULT_RUST_TOOLCHAIN + '" is tested/'
                               'supported by the maintainers of YCM/ycmd' )
   parser.add_argument( '--java-completer', action = 'store_true',
