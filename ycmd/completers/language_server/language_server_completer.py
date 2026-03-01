@@ -1029,6 +1029,9 @@ class LanguageServerCompleter( Completer ):
     self._stderr_file = None
     self._server_started = False
 
+    # Store configuration warnings to show in debug_info
+    self._config_warnings = []
+
     self._Reset()
 
 
@@ -1885,13 +1888,35 @@ class LanguageServerCompleter( Completer ):
     # settings, but self._settings is a wider dict containing a 'ls' key and any
     # other keys that we might want to add (e.g. 'project_directory',
     # 'capabilities', etc.)
+
+    # Layer 1: Start with hardcoded defaults from the completer class
     merged_ls_settings = self.DefaultSettings( request_data )
 
-    # If there is no extra-conf, the total settings are just the defaults:
+    # Layer 2: Merge with global settings from g:ycm_completer_settings
+    lookup_keys = self.SupportedFiletypes()
+    completer_settings = self.user_options.get( 'completer_settings', {} )
+
+    # Find first matching key and detect duplicates
+    matched_keys = [ key for key in lookup_keys if key in completer_settings ]
+    if matched_keys:
+      if len( matched_keys ) > 1:
+        warning_msg = ( f'Multiple settings found for { self.GetServerName() } '
+                       f'completer: { matched_keys }. Using first match '
+                       f'{ matched_keys[ 0 ]!r }. '
+                       'Please provide only one key.' )
+        LOGGER.warning( warning_msg )
+        self._config_warnings.append( warning_msg )
+
+      # Use first match
+      global_settings = completer_settings[ matched_keys[ 0 ] ]
+      utils.UpdateDict( merged_ls_settings, global_settings )
+
+    # If there is no extra-conf, the total settings are just the defaults
     self._settings = {
       'ls': merged_ls_settings
     }
 
+    # Layer 3: Merge with project-specific settings from .ycm_extra_conf.py
     module = extra_conf_store.ModuleForSourceFile( request_data[ 'filepath' ] )
     if module:
       # The user-defined settings may contain a 'ls' key, which override (merge
@@ -3124,7 +3149,7 @@ class LanguageServerCompleter( Completer ):
 
       return 'Initialized'
 
-    return [ responses.DebugInfoItem( 'Server State',
+    items = [ responses.DebugInfoItem( 'Server State',
                                       ServerStateDescription() ),
              responses.DebugInfoItem( 'Project Directory',
                                       self._project_directory ),
@@ -3135,6 +3160,15 @@ class LanguageServerCompleter( Completer ):
                json.dumps( self._settings.get( 'ls', {} ),
                            indent = 2,
                            sort_keys = True ) ) ]
+
+
+    # Add configuration warnings if any exist
+    if self._config_warnings:
+      items.append( responses.DebugInfoItem(
+        'Configuration Warnings',
+        '\n'.join( self._config_warnings ) ) )
+
+    return items
 
 
 def _DistanceOfPointToRange( point, range ):

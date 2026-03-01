@@ -20,9 +20,11 @@ from unittest import TestCase
 from hamcrest import ( all_of,
                        assert_that,
                        calling,
+                       contains_string,
                        empty,
                        ends_with,
                        equal_to,
+                       has_length,
                        instance_of,
                        contains_exactly,
                        has_entries,
@@ -1576,3 +1578,124 @@ class LanguageServerCompleterTest( TestCase ):
     # Point to the right of range.
     # +1 because diags are half-open ranges.
     _Check_Distance( ( 3, 8 ), ( 0, 2 ), ( 3, 5 ) , 4 )
+
+
+
+
+class LanguageServerCompleterSettings_test( TestCase ):
+  """Tests for completer_settings configuration option."""
+
+  @IsolatedYcmd( {
+    'completer_settings': {
+      'test': {
+        'setting1': 'from_global',
+        'setting2': 'only_global'
+      }
+    }
+  } )
+  def test_GetSettingsFromExtraConf_WithCompleterSettings_PrimaryKey( self,
+                                                                      app ):
+    # Test that primary key (language name) is used from completer_settings
+    completer = MockCompleter()
+    completer.SupportedFiletypes = lambda: [ 'test' ]
+    completer.DefaultSettings = lambda req: { 'setting1': 'hardcoded' }
+
+    request_data = BuildRequest( filepath = '/tmp/test.test',
+                                 filetype = 'test' )
+    completer._GetSettingsFromExtraConf( request_data )
+
+    # Global settings should override hardcoded defaults
+    assert_that( completer._settings[ 'ls' ],
+                 has_entries( {
+                   'setting1': 'from_global',
+                   'setting2': 'only_global'
+                 } ) )
+
+
+
+  @IsolatedYcmd( {
+    'completer_settings': {
+      'test': { 'setting1': 'from_primary' },
+      'test-server': { 'setting1': 'from_alias' }
+    }
+  } )
+  def test_GetSettingsFromExtraConf_WithDuplicateKeys_UsesFirst( self, app ):
+    # Test that when duplicate keys exist, the first one is used
+    with patch( 'ycmd.completers.language_server.'
+                'language_server_completer.LOGGER' ) as logger:
+      completer = MockCompleter()
+      completer.SupportedFiletypes = lambda: [ 'test', 'test-server' ]
+      completer.DefaultSettings = lambda req: {}
+
+      request_data = BuildRequest( filepath = '/tmp/test.test',
+                                   filetype = 'test' )
+      completer._GetSettingsFromExtraConf( request_data )
+
+      # Should use first match (primary key)
+      assert_that( completer._settings[ 'ls' ][ 'setting1' ],
+                   equal_to( 'from_primary' ) )
+
+      # Should have logged warning
+      assert_that( logger.warning.called )
+      # Get debug items
+      debug_items = completer.CommonDebugItems()
+
+      # Check that warning is in debug info
+      warning_items = [ item for item in debug_items
+                      if item.key == 'Configuration Warnings' ]
+      assert_that( warning_items, has_length( 1 ) )
+      assert_that( warning_items[ 0 ].value,
+                  contains_string( 'Multiple settings found' ) )
+      assert_that( warning_items[ 0 ].value,
+                  contains_string( 'test' ) )
+      assert_that( warning_items[ 0 ].value,
+                    contains_string( 'test-server' ) )
+
+
+  @IsolatedYcmd( {
+    'completer_settings': {
+      'test': {
+        'setting1': 'from_global',
+        'setting2': 'from_global',
+        'nested': {
+          'key1': 'global_value'
+        }
+      }
+    }
+  } )
+  def test_GetSettingsFromExtraConf_ThreeLayerMerge( self, app ):
+    # Test that all three layers merge correctly:
+    # 1. Hardcoded defaults
+    # 2. Global settings
+    # 3. Extra conf settings (none in this test)
+    completer = MockCompleter()
+    completer.SupportedFiletypes = lambda: [ 'test' ]
+    completer.DefaultSettings = lambda req: {
+      'setting1': 'hardcoded',
+      'setting3': 'hardcoded_only',
+      'nested': {
+        'key1': 'hardcoded_value',
+        'key2': 'hardcoded_value'
+      }
+    }
+
+    request_data = BuildRequest( filepath = '/tmp/test.test',
+                                 filetype = 'test' )
+    completer._GetSettingsFromExtraConf( request_data )
+
+    # Check merge result:
+    # setting1: global overrides hardcoded
+    # setting2: only in global
+    # setting3: only in hardcoded
+    # nested.key1: global overrides hardcoded
+    # nested.key2: only in hardcoded
+    assert_that( completer._settings[ 'ls' ],
+                 has_entries( {
+                   'setting1': 'from_global',
+                   'setting2': 'from_global',
+                   'setting3': 'hardcoded_only',
+                   'nested': {
+                     'key1': 'global_value',
+                     'key2': 'hardcoded_value'
+                   }
+                 } ) )

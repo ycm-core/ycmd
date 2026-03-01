@@ -202,7 +202,8 @@ After it starts up, ycmd will _delete_ the settings file you provided after
 it reads it.
 
 The settings file is something your editor should produce based on values your
-user has configured. There's also an extra file (`.ycm_extra_conf.py`) your user
+user has configured. There's also `completer_settings` configuration parameter and
+an extra file (`.ycm_extra_conf.py`) your user
 is supposed to provide to configure certain semantic completers. More
 information on it can also be found in the [corresponding section of YCM's _User
 Guide_][extra-conf-doc].
@@ -269,6 +270,33 @@ def Settings( **kwargs ):
              # `config_sections` is not used for java...
              'config_sections': { 'section0': {} }
 ```
+
+#### Configuring Predefined Completers Globally
+
+You can configure global settings for ycmd's predefined completers (Java, Go,
+Rust, C-family) using the `g:ycm_completer_settings` option (analogue to `ls` key
+in `Settings()` function from `.ycm_extra_conf.py` for a completer):
+
+```vim
+let g:ycm_completer_settings = {
+\  'go': {
+\    'hoverKind': 'SynopsisDocumentation'
+\  },
+\  'rust': {
+\    'diagnostics': {
+\      'disabled': [
+\        'inactive-code',
+\      ]
+\    },
+\  }
+\}
+```
+
+**Supported keys**: `java`, `go`, `rust`, `cpp`/`c`/`objc`/`objcpp`/`cuda`.
+
+**Settings priority**: hardcoded defaults have the lowest priorities,
+then to set user's defaults `g:ycm_completer_settings`, and finally the
+settings from the `ls` key returned by the `Settings()` function in `.ycm_extra_conf.py`
 
 ##### `language_server` configuration
 
@@ -385,7 +413,7 @@ def Settings( **kwargs ):
 ```
 
 A number of LSP completers are currently supported without `language_server`,
-usch as:
+such as:
 
 - Java
 - Rust
