@@ -1194,6 +1194,7 @@ class LanguageServerCompleterTest( TestCase ):
       diagnostics = contains_exactly(
         has_entries( {
           'kind': equal_to( 'ERROR' ),
+          'severity': equal_to( 1 ),
           'location': LocationMatcher( filepath, 4, 11 ),
           'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
           'ranges': contains_exactly(
@@ -1203,6 +1204,7 @@ class LanguageServerCompleterTest( TestCase ):
         } ),
         has_entries( {
           'kind': equal_to( 'ERROR' ),
+          'severity': equal_to( 1 ),
           'location': LocationMatcher( filepath, 1, 1 ),
           'location_extent': RangeMatcher( filepath, ( 1, 1 ), ( 1, 1 ) ),
           'ranges': contains_exactly(
@@ -1350,16 +1352,16 @@ class LanguageServerCompleterTest( TestCase ):
             'start': { 'line': 3, 'character': 10 },
             'end': { 'line': 3, 'character': 11 }
           },
-          'severity': 1,
-          'message': 'Second error',
+          'severity': 2,
+          'message': 'Second warning',
           'code': 8
         }, {
           'range': {
             'start': { 'line': 3, 'character': 10 },
             'end': { 'line': 3, 'character': 11 }
           },
-          'severity': 1,
-          'message': 'Third error',
+          'severity': 4,
+          'message': 'Third hint',
           'code': '8'
         } ]
       }
@@ -1380,6 +1382,7 @@ class LanguageServerCompleterTest( TestCase ):
       diagnostics = contains_exactly(
         has_entries( {
           'kind': equal_to( 'ERROR' ),
+          'severity': equal_to( 1 ),
           'location': LocationMatcher( filepath, 4, 11 ),
           'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
           'ranges': contains_exactly(
@@ -1388,21 +1391,23 @@ class LanguageServerCompleterTest( TestCase ):
           'fixit_available': False
         } ),
         has_entries( {
-          'kind': equal_to( 'ERROR' ),
+          'kind': equal_to( 'WARNING' ),
+          'severity': equal_to( 2 ),
           'location': LocationMatcher( filepath, 4, 11 ),
           'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
           'ranges': contains_exactly(
              RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
-          'text': equal_to( 'Second error [8]' ),
+          'text': equal_to( 'Second warning [8]' ),
           'fixit_available': False
         } ),
         has_entries( {
-          'kind': equal_to( 'ERROR' ),
+          'kind': equal_to( 'HINT' ),
+          'severity': equal_to( 4 ),
           'location': LocationMatcher( filepath, 4, 11 ),
           'location_extent': RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ),
           'ranges': contains_exactly(
              RangeMatcher( filepath, ( 4, 11 ), ( 4, 12 ) ) ),
-          'text': equal_to( 'Third error [8]' ),
+          'text': equal_to( 'Third hint [8]' ),
           'fixit_available': False
         } )
       )

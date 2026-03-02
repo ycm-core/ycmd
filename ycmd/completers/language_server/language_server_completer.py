@@ -342,7 +342,7 @@ class LanguageServerConnection( threading.Thread ):
     self._stop_event = threading.Event()
     self._notification_handler = notification_handler
 
-    self._collector = RejectCollector()
+    self._collector = UnsolicitedEditApplier()
     self._observers = []
 
 
@@ -1675,7 +1675,7 @@ class LanguageServerCompleter( Completer ):
       return responses.BuildDisplayMessageResponse(
           'No diagnostics for current file.' )
 
-    # Prefer errors to warnings and warnings to infos.
+    # Prefer errors to warnings and warnings to infos and infos to hints.
     diagnostics.sort( key = lambda d: d[ 'severity' ] )
 
     # request_data uses 1-based offsets, but LSP diagnostics use 0-based.
@@ -1684,6 +1684,7 @@ class LanguageServerCompleter( Completer ):
         GetFileLines( request_data, current_file )[ current_line_lsp ],
         request_data[ 'column_codepoint' ] ) - 1
     minimum_distance = None
+    diag = None
 
     message = 'No diagnostics for current line.'
     for diagnostic in diagnostics:
@@ -1694,18 +1695,25 @@ class LanguageServerCompleter( Completer ):
       point = { 'line': current_line_lsp, 'character': current_column }
       distance = _DistanceOfPointToRange( point, diagnostic[ 'range' ] )
       if minimum_distance is None or distance < minimum_distance:
-        message = diagnostic[ 'message' ]
-        try:
-          code = diagnostic[ 'code' ]
-          message += f' [{ code }]' # noqa
-        except KeyError:
-          pass
-
+        diag = diagnostic
         if distance == 0:
           break
         minimum_distance = distance
 
+    if diag is not None:
+      message = self.BuildDetailedDiagnostic( diag )
     return responses.BuildDisplayMessageResponse( message )
+
+
+  def BuildDetailedDiagnostic( self, diagnostic ):
+    message = diagnostic[ 'message' ]
+    try:
+      code = diagnostic[ 'code' ]
+      message += f' [{ code }]' # noqa
+    except KeyError:
+      pass
+    return message
+
 
 
   @abc.abstractmethod
@@ -2146,6 +2154,23 @@ class LanguageServerCompleter( Completer ):
                   'Server reported: %s',
                   params[ 'message' ] )
 
+
+    # HACK: Not really a notification; we pretend it is because we send it
+    # (unsolicited) to our clients and pretend to the server that it was applied
+    # anyway.
+    if notification[ 'method' ] == 'workspace/applyEdit':
+      LOGGER.info( "Server requested to apply edit: %s",
+                   notification )
+      fixit = WorkspaceEditToFixIt(
+        request_data,
+        notification[ 'params' ][ 'edit' ],
+        notification[ 'params' ].get( 'label' ) or None )
+
+      if fixit:
+        response = responses.BuildFixItResponse( [ fixit ] )
+        LOGGER.info( "Response resulting: %s", response )
+        return response
+
     return None
 
 
@@ -2361,6 +2386,44 @@ class LanguageServerCompleter( Completer ):
     return os.path.dirname( filepath )
 
 
+  def FindProjectFromRootFiles( self,
+                                filepath,
+                                project_root_files,
+                                nearest=True ):
+
+    project_folder = None
+    project_root_type = None
+
+    # First, find the nearest dir that has one of the root file types
+    for folder in utils.PathsToAllParentFolders( filepath ):
+      f = Path( folder )
+      for root_file in project_root_files:
+        if next( f.glob( root_file ), [] ):
+          # Found one, store the root file and the current nearest folder
+          project_root_type = root_file
+          project_folder = folder
+          break
+      if project_folder:
+        break
+
+    if not project_folder:
+      return None
+
+    # If asking for the nearest, return the one found
+    if nearest:
+      return str( project_folder )
+
+    # Otherwise keep searching up from the nearest until we don't find any more
+    for folder in utils.PathsToAllParentFolders( os.path.join( project_folder,
+                                                               '..' ) ):
+      f = Path( folder )
+      if next( f.glob( project_root_type ), [] ):
+        project_folder = folder
+      else:
+        break
+    return project_folder
+
+
   def GetWorkspaceForFilepath( self, filepath, strict = False ):
     """Return the workspace of the provided filepath. This could be a subproject
     or a completely unrelated project to the root directory.
@@ -2371,12 +2434,12 @@ class LanguageServerCompleter( Completer ):
     reuse this implementation.
     """
     project_root_files = self.GetProjectRootFiles()
+    workspace = None
     if project_root_files:
-      for folder in utils.PathsToAllParentFolders( filepath ):
-        for root_file in project_root_files:
-          if next( Path( folder ).glob( root_file ), [] ):
-            return folder
-    return None if strict else os.path.dirname( filepath )
+      workspace = self.FindProjectFromRootFiles( filepath,
+                                                 project_root_files,
+                                                 nearest = True )
+    return workspace or ( None if strict else os.path.dirname( filepath ) )
 
 
   def _SendInitialize( self, request_data ):
@@ -3572,12 +3635,15 @@ def _BuildDiagnostic( contents, uri, diag ):
     # code field doesn't exist.
     pass
 
+  severity = diag.get( 'severity' ) or 1
   return responses.Diagnostic(
     ranges = [ r ],
     location = r.start_,
     location_extent = r,
     text = diag_text,
-    kind = lsp.SEVERITY[ diag.get( 'severity' ) or 1 ].upper() )
+    kind = lsp.SEVERITY[ severity ].upper(),
+    severity = severity
+  )
 
 
 def TextEditToChunks( request_data, uri, text_edit ):
@@ -3619,10 +3685,39 @@ def WorkspaceEditToFixIt( request_data,
                                        workspace_edit[ 'changes' ][ uri ] ) )
   else:
     chunks = []
-    for text_document_edit in workspace_edit[ 'documentChanges' ]:
-      uri = text_document_edit[ 'textDocument' ][ 'uri' ]
-      edits = text_document_edit[ 'edits' ]
-      chunks.extend( TextEditToChunks( request_data, uri, edits ) )
+    for document_change in workspace_edit[ 'documentChanges' ]:
+      if 'kind' in document_change:
+        # File operation
+        try:
+          if document_change[ 'kind' ] == 'create':
+            chunks.append( responses.FixItResourceOp( {
+              'op': 'create',
+              'uri': lsp.UriToFilePath( document_change[ 'uri' ] ),
+              'options': document_change.get( 'options', {} ),
+            } ) )
+          elif document_change[ 'kind' ] == 'rename':
+            chunks.append( responses.FixItResourceOp( {
+              'op': 'rename',
+              'old_filepath': lsp.UriToFilePath( document_change[ 'oldUri' ] ),
+              'new_filepath': lsp.UriToFilePath( document_change[ 'newUri' ] ),
+              'options': document_change.get( 'options', {} ),
+            } ) )
+          elif document_change[ 'kind' ] == 'delete':
+            chunks.append( responses.FixItResourceOp( {
+              'op': 'delete',
+              'uri': lsp.UriToFilePath( document_change[ 'uri' ] ),
+              'options': document_change.get( 'options', {} ),
+            } ) )
+        except lsp.InvalidUriException:
+          LOGGER.debug( 'Invalid filepath received in TextEdit create' )
+          continue
+      else:
+        # Text document edit
+        chunks.extend(
+          TextEditToChunks( request_data,
+                            document_change[ 'textDocument' ][ 'uri' ],
+                            document_change[ 'edits' ] ) )
+
   return responses.FixIt(
     responses.Location( request_data[ 'line_num' ],
                         request_data[ 'column_num' ],
@@ -3676,6 +3771,14 @@ class LanguageServerCompletionsCache( CompletionsCache ):
 class RejectCollector:
   def CollectApplyEdit( self, request, connection ):
     connection.SendResponse( lsp.ApplyEditResponse( request, False ) )
+
+
+class UnsolicitedEditApplier:
+  def CollectApplyEdit( self, request, connection: LanguageServerConnection ):
+    # Pretend this event is a notification and let the LSP implenentation handle
+    # it. This is a hack to forward these requests to the client.
+    connection._AddNotificationToQueue( request )
+    connection.SendResponse( lsp.ApplyEditResponse( request, True ) )
 
 
 class EditCollector:
