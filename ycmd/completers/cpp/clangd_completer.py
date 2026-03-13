@@ -429,7 +429,8 @@ class ClangdCompleter( language_server_completer.LanguageServerCompleter ):
 
 def CompilationDatabaseExists( file_dir ):
   for folder in PathsToAllParentFolders( file_dir ):
-    if os.path.exists( os.path.join( folder, 'compile_commands.json' ) ):
+    compile_db = os.path.join( folder, 'compile_commands.json' )
+    if os.path.exists( compile_db ) and os.access( compile_db, os.W_OK ):
       return True
 
   return False
