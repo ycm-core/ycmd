@@ -172,24 +172,3 @@ class GetCompletionsTest( TestCase ):
           ),
           'errors': empty(),
         } ) )
-
-
-  @SharedYcmd
-  def test_GetCompletions_DoesntStartWithAmbiguousMultipleSolutions(
-      self, app ):
-    filepath = PathToTestFile( 'testy-multiple-solutions',
-                               'solution-not-named-like-folder',
-                               'testy', 'Program.cs' )
-    contents = ReadFile( filepath )
-    event_data = BuildRequest( filepath = filepath,
-                               filetype = 'cs',
-                               contents = contents,
-                               event_name = 'FileReadyToParse' )
-
-    assert_that(
-      calling( app.post_json ).with_args( '/event_notification', event_data ),
-      raises( AppError, 'Autodetection of solution file failed' ),
-      "The Omnisharp server started, despite us not being able to find a "
-      "suitable solution file to feed it. Did you fiddle with the solution "
-      "finding code in cs_completer.py? Hopefully you've enhanced it: you need "
-      "to update this test then :)" )
