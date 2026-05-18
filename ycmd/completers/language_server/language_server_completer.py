@@ -3690,7 +3690,7 @@ class EditCollector:
 
 class WatchdogHandler( PatternMatchingEventHandler ):
   def __init__( self, server, patterns ):
-    super().__init__( patterns )
+    super().__init__( patterns=patterns )
     self._server = server
 
 
