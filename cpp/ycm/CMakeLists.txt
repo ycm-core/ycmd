@@ -43,7 +43,11 @@ if ( USE_CLANG_COMPLETER AND
            "0392dac547a68a367ffbabfac4a3d5d4a948a080717e510ab070f2a3605ae05f" )
     endif()
   elseif ( WIN32 )
-    if( 64_BIT_PLATFORM )
+    if ( "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(ARM64.*|arm64.*)" )
+      set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-woa64" )
+      set( LIBCLANG_SHA256
+           "2c36162d57ed0956fe4e5c370452f91e7bc8456ab6cce6de725a39e7d8d80f41" )
+    elseif( 64_BIT_PLATFORM )
       set( LIBCLANG_DIRNAME "libclang-${CLANG_VERSION}-win64" )
       set( LIBCLANG_SHA256
            "44bee5556423ab500093a10107c5974fc6335dee4d5abae770a3a0e52726b37f" )
