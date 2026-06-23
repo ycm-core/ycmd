@@ -235,6 +235,10 @@ def OnWindows():
   return platform.system() == 'Windows'
 
 
+def OnWoA():
+  return OnWindows() and platform.machine().lower().startswith( 'arm64' )
+
+
 def OnAArch64():
   return platform.machine().lower().startswith( 'aarch64' )
 
@@ -623,7 +627,7 @@ def GetCmakeCommonArgs( args ):
 
   # Set the architecture for the Visual Studio 16/17 generator.
   if OnWindows() and args.msvc >= 16 and not args.ninja and not IS_MSYS:
-    if platform.machine() == 'ARM64':
+    if OnWoA():
       arch = 'ARM64'
     elif IS_64BIT:
       arch = 'x64'
@@ -1176,6 +1180,10 @@ def EnableTypeScriptCompleter( args ):
 
 def GetClangdTarget():
   if OnWindows():
+    if OnWoA():
+      return [
+        ( 'clangd-{version}-woa64',
+          '33b965780d42113fb0b450d7da6bfbbdc1dafd0f0f7c502e140d7bc41d7f0f1a' ) ]
     return [
       ( 'clangd-{version}-win64',
         'f3391f8255da1d101e8868a0f5b0af28cd9b1729ade6c0857286a438373dc5f3' ),
