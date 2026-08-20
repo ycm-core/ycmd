@@ -16,9 +16,31 @@
 # along with ycmd.  If not, see <http://www.gnu.org/licenses/>.
 
 from ycmd.completers.language_server import language_server_protocol as lsp
-from hamcrest import assert_that, equal_to, calling, is_not, raises
+from hamcrest import assert_that, equal_to, calling, has_entries, is_not, raises
+from ycmd.request_wrap import RequestWrap
 from unittest import TestCase
 from ycmd.tests.test_utils import UnixOnly, WindowsOnly
+
+
+def PrepareJson( contents = '',
+                 line_num = 1,
+                 column_num = 1,
+                 given_range = None ):
+  message = {
+    'line_num': line_num,
+    'column_num': column_num,
+    'filepath': '/foo',
+    'file_data': {
+      '/foo': {
+        'filetypes': [ '' ],
+        'contents': contents
+      }
+    }
+  }
+  if given_range is not None:
+    message[ 'range' ] = given_range
+
+  return message
 
 
 class LanguageServerProtocolTest( TestCase ):
@@ -206,3 +228,41 @@ class LanguageServerProtocolTest( TestCase ):
                      equal_to( code_units ) )
         assert_that( lsp.UTF16CodeUnitsToCodepoints( line_value, code_units ),
                      equal_to( codepoints ) )
+
+  def test_DefaultRangeUsesColumnCodepointNotStartCodepoint( self ):
+    file_content = 'foo-bar'
+    request_data = RequestWrap( PrepareJson( file_content, 1, 4 ) )
+
+    assert_that( request_data[ 'start_codepoint' ], equal_to( 1 ) )
+    assert_that( request_data[ 'column_codepoint' ], equal_to( 4 ) )
+
+    assert_that( lsp.Range( request_data ), has_entries( {
+      'start': has_entries( { 'line': 0, 'character': 3 } ),
+      'end': has_entries( { 'line': 0, 'character': 4 } ),
+    } ) )
+
+  def test_Range_EndCodepointEqualsLineLength_DoesNotWrap( self ):
+    file_content = '.X.\n...'
+    range_of_X = {
+      'start': { 'line_num': 1, 'column_num': 2 },
+      'end': { 'line_num': 1, 'column_num': 3 },
+    }
+    request_data = RequestWrap( PrepareJson( file_content, 1, 1, range_of_X ) )
+
+    assert_that( lsp.Range( request_data ), has_entries( {
+      'start': has_entries( { 'line': 0, 'character': 1 } ),
+      'end': has_entries( { 'line': 0, 'character': 2 } ),
+    } ) )
+
+  def test_LastCharOnLineSRangeWrapsToNextLine( self ):
+    file_content = '..X\n...'
+    range_of_X = {
+      'start': { 'line_num': 1, 'column_num': 3 },
+      'end': { 'line_num': 1, 'column_num': 4 },
+    }
+    request_data = RequestWrap( PrepareJson( file_content, 1, 1, range_of_X ) )
+
+    assert_that( lsp.Range( request_data ), has_entries( {
+      'start': has_entries( { 'line': 0, 'character': 2 } ),
+      'end': has_entries( { 'line': 1, 'character': 0 } ),
+    } ) )

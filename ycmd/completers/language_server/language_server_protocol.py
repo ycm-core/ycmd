@@ -689,7 +689,7 @@ def Range( request_data ):
   lines = request_data[ 'lines' ]
 
   if 'range' not in request_data:
-    start_codepoint = request_data[ 'start_codepoint' ]
+    start_codepoint = request_data[ 'column_codepoint' ]
     start_line_num = request_data[ 'line_num' ]
     start_line_value = request_data[ 'line_value' ]
 
@@ -715,7 +715,7 @@ def Range( request_data ):
 
   # LSP requires to use the start of the next line as the end position for a
   # range that ends with a newline.
-  if end_codepoint >= len( end_line_value ):
+  if end_codepoint > len( end_line_value ):
     end_line_num += 1
     end_line_value = ''
     end_codepoint = 1
