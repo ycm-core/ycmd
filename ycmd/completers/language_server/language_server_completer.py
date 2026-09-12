@@ -299,9 +299,10 @@ class LanguageServerConnection( threading.Thread ):
 
 
   def _CancelWatchdogThreads( self ):
-    for observer in self._observers:
+    for observer in self._observers.values():
       observer.stop()
       observer.join()
+    self._observers.clear()
 
 
   def Shutdown( self ):
@@ -343,7 +344,7 @@ class LanguageServerConnection( threading.Thread ):
     self._notification_handler = notification_handler
 
     self._collector = RejectCollector()
-    self._observers = []
+    self._observers = {}
 
 
   @contextlib.contextmanager
@@ -607,7 +608,18 @@ class LanguageServerConnection( threading.Thread ):
                            self._project_directory,
                            recursive = True )
         observer.start()
-        self._observers.append( observer )
+        self._observers[ reg[ 'id' ] ] = observer
+    self.SendResponse( lsp.Void( request ) )
+
+
+  def _HandleDynamicUnregistrations( self, request ):
+    for reg in request[ 'params' ][ 'unregisterations' ]:
+      if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
+        observer = self._observers.pop( reg[ 'id' ], None )
+        if observer is None:
+          continue
+        observer.stop()
+        observer.join()
     self.SendResponse( lsp.Void( request ) )
 
 
@@ -625,10 +637,7 @@ class LanguageServerConnection( threading.Thread ):
       elif method == 'client/registerCapability':
         self._HandleDynamicRegistrations( request )
       elif method == 'client/unregisterCapability':
-        for reg in request[ 'params' ][ 'unregisterations' ]:
-          if reg[ 'method' ] == 'workspace/didChangeWatchedFiles':
-            self._CancelWatchdogThreads()
-        self.SendResponse( lsp.Void( request ) )
+        self._HandleDynamicUnregistrations( request )
       elif method == 'workspace/workspaceFolders':
         self.SendResponse(
           lsp.Accept( request,
